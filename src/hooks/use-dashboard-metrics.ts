@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { jobStatusClient, workerClient } from '@/lib/client';
 import { JobProcessingStatus } from '@/lib/grpc/jobworkerp/data/common';
 
-export const useWorkerCount = (opts?: { refetchInterval?: number }) => {
+export const useWorkerCount = (opts?: { refetchInterval?: number | false }) => {
     return useQuery({
         queryKey: ['workers', 'count'],
         queryFn: async () => {
@@ -16,7 +16,7 @@ export const useWorkerCount = (opts?: { refetchInterval?: number }) => {
     })
 };
 
-export const useActiveJobsStats = (opts?: { refetchInterval?: number }) => {
+export const useActiveJobsStats = (opts?: { refetchInterval?: number | false }) => {
     return useQuery({
         queryKey: ['jobs', 'processing-status'],
         queryFn: async () => {
@@ -38,11 +38,11 @@ export const useActiveJobsStats = (opts?: { refetchInterval?: number }) => {
             }
             return stats;
         },
-        refetchInterval: opts?.refetchInterval ?? 5000
+        refetchInterval: opts?.refetchInterval
     });
 };
 
-export const useChannelStats = (opts?: { refetchInterval?: number }) => {
+export const useChannelStats = (opts?: { refetchInterval?: number | false }) => {
     return useQuery({
         queryKey: ['workers', 'channels'],
         queryFn: async () => {

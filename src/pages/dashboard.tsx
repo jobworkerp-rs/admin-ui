@@ -34,9 +34,9 @@ export default function Dashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true)
   const refetchInterval = autoRefresh ? 5000 : false
 
-  const { data: workerCount, isLoading: isWorkersLoading } = useWorkerCount({ refetchInterval: refetchInterval || undefined })
-  const { data: jobStats, isLoading: isJobsLoading } = useActiveJobsStats({ refetchInterval: refetchInterval || undefined })
-  const { data: channels, isLoading: isChannelsLoading } = useChannelStats({ refetchInterval: refetchInterval || undefined })
+  const { data: workerCount, isLoading: isWorkersLoading } = useWorkerCount({ refetchInterval })
+  const { data: jobStats, isLoading: isJobsLoading } = useActiveJobsStats({ refetchInterval })
+  const { data: channels, isLoading: isChannelsLoading } = useChannelStats({ refetchInterval })
 
   const activeWorkers = channels?.reduce((acc, ch) => acc + parseInt(ch.workerCount, 10), 0) || 0
 
