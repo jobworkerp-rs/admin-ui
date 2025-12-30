@@ -14,7 +14,8 @@ categories:
       - 'bugfix'
       - 'bug'
   - title: '🧰 Maintenance'
-    label: 'chore'
+    labels:
+      - 'chore'
 change-template: '- $TITLE (#$NUMBER)'
 change-title-escapes: '\<*_&#@'
 version-resolver:
