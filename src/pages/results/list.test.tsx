@@ -143,12 +143,14 @@ describe('JobResultList', () => {
             { id: { value: 'worker1' }, data: { name: 'Test Worker' } },
         ];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.findListBy as any).mockImplementation(async function* () {
             for (const result of mockJobResults) {
                 yield result;
             }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workerClient.findList as any).mockImplementation(async function* () {
             for (const worker of mockWorkers) {
                 yield worker;
@@ -176,10 +178,12 @@ describe('JobResultList', () => {
     });
 
     it('renders empty state', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.findListBy as any).mockImplementation(async function* () {
             // yield nothing
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workerClient.findList as any).mockImplementation(async function* () {
             // yield nothing
         });
@@ -207,16 +211,19 @@ describe('JobResultList', () => {
 
         let resultsList = [...mockJobResults];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.findListBy as any).mockImplementation(async function* () {
             for (const result of resultsList) {
                 yield result;
             }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workerClient.findList as any).mockImplementation(async function* () {
             yield { id: { value: 'worker1' }, data: { name: 'Test Worker' } };
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.deleteBulk as any).mockImplementation(async () => {
             resultsList = [];
             return { deletedCount: '1' };
@@ -272,16 +279,19 @@ describe('JobResultList', () => {
             },
         ];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.findListBy as any).mockImplementation(async function* () {
             for (const result of mockJobResults) {
                 yield result;
             }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workerClient.findList as any).mockImplementation(async function* () {
             yield { id: { value: 'worker1' }, data: { name: 'Test Worker' } };
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.deleteBulk as any).mockRejectedValue(new Error('Delete failed'));
 
         renderWithProviders(<JobResultList />);
@@ -317,10 +327,12 @@ describe('JobResultList', () => {
     });
 
     it('displays page title and description', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.findListBy as any).mockImplementation(async function* () {
             // yield nothing
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workerClient.findList as any).mockImplementation(async function* () {
             // yield nothing
         });
@@ -334,10 +346,12 @@ describe('JobResultList', () => {
     });
 
     it('displays filter card', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (jobResultClient.findListBy as any).mockImplementation(async function* () {
             // yield nothing
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workerClient.findList as any).mockImplementation(async function* () {
             // yield nothing
         });
