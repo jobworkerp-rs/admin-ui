@@ -94,7 +94,7 @@ pnpm exec playwright test
 
 | 変数名 | 説明 | デフォルト値 |
 |----------|-------------|---------|
-| `VITE_API_BASE_URL` | gRPC-Web API のベースURL | `http://localhost:8080` |
+| `VITE_GRPC_ENDPOINT` | gRPC-Web API のベースURL | `http://localhost:9000` |
 
 ## ライセンス
 
