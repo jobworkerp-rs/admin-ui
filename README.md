@@ -94,7 +94,7 @@ Environment variables can be set in `.env` files (e.g., `.env.local`).
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_API_BASE_URL` | Base URL for the gRPC-Web API | `http://localhost:8080` |
+| `VITE_GRPC_ENDPOINT` | Base URL for the gRPC-Web API | `http://localhost:9000` |
 
 ## License
 
