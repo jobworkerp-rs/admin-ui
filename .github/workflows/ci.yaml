@@ -33,7 +33,7 @@ jobs:
         run: pnpm run lint
 
       - name: Run TypeScript check
-        run: pnpm exec tsc --noEmit --skipLibCheck
+        run: pnpm exec tsc --noEmit
 
   test:
     runs-on: ubuntu-latest
