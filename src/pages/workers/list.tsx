@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Plus, MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -37,9 +37,17 @@ export default function WorkerList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const LIMIT = 20;
 
   // Fetch workers
-  const { data: workers, isLoading: isLoadingWorkers, error, isError } = useWorkers({ runnerIds: [], runnerTypes: [] }); // default empty filter
+  const { data: workers, isLoading: isLoadingWorkers, error, isError } = useWorkers({ 
+    runnerIds: [], 
+    runnerTypes: [],
+    limit: LIMIT,
+    offset: (page * LIMIT).toString(),
+  });
+
 
   // Fetch runners for mapping names
   const { data: runners } = useRunners();
@@ -105,7 +113,11 @@ export default function WorkerList() {
             ) : (
                 workers?.map((worker) => (
                 <TableRow key={worker.id?.value}>
-                  <TableCell className="font-medium">{worker.data?.name}</TableCell>
+                  <TableCell className="font-medium">
+                      <Link to={`/workers/${worker.id?.value}`} className="hover:underline text-primary">
+                          {worker.data?.name}
+                      </Link>
+                  </TableCell>
                   <TableCell>
                       <Badge variant="outline">
                           {getRunnerName(worker.data?.runnerId?.value)}
@@ -131,6 +143,10 @@ export default function WorkerList() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{t("common.actions")}</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => navigate(`/workers/${worker.id?.value}`)}>
+                          <Search className="mr-2 h-4 w-4" />
+                          {t("common.details") || "Details"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/workers/${worker.id?.value}/edit`)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           {t("common.edit")}
                         </DropdownMenuItem>
@@ -150,6 +166,24 @@ export default function WorkerList() {
             )}
           </TableBody>
         </Table>
+
+      </div>
+
+      <div className="flex justify-end gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0 || isLoadingWorkers}
+          >
+              Previous
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setPage(p => p + 1)}
+            disabled={!workers || workers.length < LIMIT || isLoadingWorkers}
+          >
+              Next
+          </Button>
       </div>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

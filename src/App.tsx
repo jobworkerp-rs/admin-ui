@@ -7,6 +7,7 @@ import RunnerList from "@/pages/runners/list"
 import RunnerEdit from "@/pages/runners/edit"
 import WorkerList from "@/pages/workers/list"
 import WorkerEdit from "@/pages/workers/edit"
+import WorkerDetail from "@/pages/workers/detail"
 import JobEnqueue from "@/pages/jobs/enqueue"
 import JobDetail from "@/pages/jobs/detail"
 import JobResultDetail from "@/pages/results/detail"
@@ -24,7 +25,8 @@ function App() {
           <Route path="runners/:id" element={<RunnerEdit />} />
           <Route path="workers" element={<WorkerList />} />
           <Route path="workers/new" element={<WorkerEdit />} />
-          <Route path="workers/:id" element={<WorkerEdit />} />
+          <Route path="workers/:id" element={<WorkerDetail />} />
+          <Route path="workers/:id/edit" element={<WorkerEdit />} />
           <Route path="jobs" element={<JobList />} />
           <Route path="jobs/new" element={<JobEnqueue />} />
           <Route path="jobs/:id" element={<JobDetail />} />
