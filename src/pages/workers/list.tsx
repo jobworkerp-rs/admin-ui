@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Plus, MoreHorizontal, Pencil, Trash, Search } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,14 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,6 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useWorkers, useDeleteWorker } from "@/hooks/use-workers";
 import { useRunners } from "@/hooks/use-runners";
@@ -36,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 export default function WorkerList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  // const [deleteId, setDeleteId] = useState<string | null>(null); // Removed unused state
   const [page, setPage] = useState(0);
   const LIMIT = 20;
 
@@ -54,12 +47,7 @@ export default function WorkerList() {
 
   const deleteWorker = useDeleteWorker();
 
-  const handleDelete = async () => {
-    if (deleteId) {
-      await deleteWorker.mutateAsync(deleteId);
-      setDeleteId(null);
-    }
-  };
+  // const handleDelete = async () => { ... } // Removed unused function
 
   const getRunnerName = (runnerId?: string) => {
       if (!runnerId) return "N/A";
@@ -134,32 +122,35 @@ export default function WorkerList() {
                       {worker.data?.queueType}
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>{t("common.actions")}</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigate(`/workers/${worker.id?.value}`)}>
-                          <Search className="mr-2 h-4 w-4" />
-                          {t("common.details") || "Details"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/workers/${worker.id?.value}/edit`)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          {t("common.edit")}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                          onClick={() => setDeleteId(worker.id?.value || null)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          {t("common.delete")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t("common.delete_confirm_title")}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t("common.delete_confirm_desc")}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={() => {
+                              if (worker.id?.value) {
+                                deleteWorker.mutate(worker.id.value);
+                              }
+                            }}
+                            disabled={deleteWorker.isPending}
+                          >
+                            {deleteWorker.isPending ? "Deleting..." : t("common.delete")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))
@@ -185,27 +176,6 @@ export default function WorkerList() {
               Next
           </Button>
       </div>
-
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("common.delete_confirm_title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("common.delete_confirm_desc")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleDelete}
-              disabled={deleteWorker.isPending}
-            >
-              {deleteWorker.isPending ? "Deleting..." : t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
