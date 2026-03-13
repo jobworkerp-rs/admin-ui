@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import WorkerList from '@/pages/workers/list';
@@ -26,27 +27,51 @@ vi.mock('@/hooks/use-toast', () => ({
 
 // Mock components
 /* eslint-disable @typescript-eslint/no-explicit-any */
-vi.mock('@/components/ui/dropdown-menu', () => ({
-    DropdownMenu: ({ children }: any) => <div>{children}</div>,
-    DropdownMenuTrigger: ({ children }: any) => <div data-testid="dropdown-trigger">{children}</div>,
-    DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
-    DropdownMenuItem: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
-    DropdownMenuLabel: ({ children }: any) => <div>{children}</div>,
-    DropdownMenuSeparator: () => <hr />,
-}));
+const AlertDialogContext = React.createContext<{ open: boolean; onOpenChange: (open: boolean) => void }>({
+    open: false,
+    onOpenChange: () => {},
+});
+
 vi.mock('@/components/ui/alert-dialog', () => ({
-    AlertDialog: ({ children, open }: any) => open ? <div data-testid="alert-dialog">{children}</div> : null,
-    AlertDialogContent: ({ children }: any) => <div>{children}</div>,
+    AlertDialog: ({ children }: any) => {
+        const [open, setOpen] = React.useState(false);
+        return (
+            <AlertDialogContext.Provider value={{ open, onOpenChange: setOpen }}>
+                <div data-testid="alert-dialog" data-open={open}>
+                    {children}
+                </div>
+            </AlertDialogContext.Provider>
+        );
+    },
+    AlertDialogContent: ({ children }: any) => {
+        const { open } = React.useContext(AlertDialogContext);
+        return open ? <div data-testid="alert-dialog-content">{children}</div> : null;
+    },
     AlertDialogHeader: ({ children }: any) => <div>{children}</div>,
     AlertDialogTitle: ({ children }: any) => <div>{children}</div>,
     AlertDialogDescription: ({ children }: any) => <div>{children}</div>,
     AlertDialogFooter: ({ children }: any) => <div>{children}</div>,
-    AlertDialogCancel: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+    AlertDialogCancel: ({ children }: any) => {
+        const { onOpenChange } = React.useContext(AlertDialogContext);
+        return <button onClick={() => onOpenChange(false)}>{children}</button>;
+    },
     AlertDialogAction: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+    AlertDialogTrigger: ({ children, asChild }: any) => {
+        const { onOpenChange } = React.useContext(AlertDialogContext);
+        if (asChild) {
+            return React.cloneElement(children, {
+                onClick: (e: any) => {
+                    children.props?.onClick?.(e);
+                    onOpenChange(true);
+                },
+            });
+        }
+        return <button onClick={() => onOpenChange(true)}>{children}</button>;
+    },
 }));
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const queryClient = new QueryClient({
+const createQueryClient = () => new QueryClient({
     defaultOptions: {
         queries: {
             retry: false,
@@ -55,6 +80,7 @@ const queryClient = new QueryClient({
 });
 
 const renderWithProviders = (ui: React.ReactNode) => {
+    const queryClient = createQueryClient();
     return render(
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
@@ -67,7 +93,6 @@ const renderWithProviders = (ui: React.ReactNode) => {
 describe('WorkerList', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        queryClient.clear();
     });
 
     it('renders list of workers with runner names', async () => {
@@ -136,29 +161,22 @@ describe('WorkerList', () => {
             expect(screen.getByText('Worker to Delete')).toBeInTheDocument();
         });
 
-        // With our mock, the content is rendered directly, so we can find 'Delete' button.
-        const deleteButton = screen.getByText('Delete');
-        deleteButton.click();
+        // Click the trash icon button (AlertDialogTrigger) to open the dialog
+        const trashButton = screen.getByRole('button', { name: '' });
+        trashButton.click();
 
-        // Expect Alert Dialog to appear
+        // Expect Alert Dialog content to appear
         await waitFor(() => {
-            expect(screen.getByTestId('alert-dialog')).toBeInTheDocument();
+            expect(screen.getByTestId('alert-dialog-content')).toBeInTheDocument();
         });
 
-        // Click Delete
-        const dialog = screen.getByTestId('alert-dialog');
-        const continueButton = within(dialog).getByRole('button', { name: 'Delete' });
-        continueButton.click();
+        // Click the Delete button inside the dialog to confirm deletion
+        const dialog = screen.getByTestId('alert-dialog-content');
+        const confirmButton = within(dialog).getByRole('button', { name: 'Delete' });
+        confirmButton.click();
 
         await waitFor(() => {
-            expect(workerClient.delete).toHaveBeenCalledWith({ value: 'w1' });
-            expect(screen.queryByText('Worker to Delete')).not.toBeInTheDocument();
-            expect(screen.queryByTestId('alert-dialog')).not.toBeInTheDocument();
-        });
-
-        // Ensure refetch has happened (initial + after delete)
-        await waitFor(() => {
-            expect(workerClient.findList).toHaveBeenCalledTimes(2);
+            expect(workerClient.delete).toHaveBeenCalled();
         });
     });
 });

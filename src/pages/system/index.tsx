@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStuckJobs, useCleanupSystem, useRestoreJobs } from '@/hooks/use-system';
-import { useCancelJob } from '@/hooks/use-jobs';
+import { useCancelJob, usePurgeStaleJobs } from '@/hooks/use-jobs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,11 @@ export default function SystemAdmin() {
   const [retentionHours, setRetentionHours] = useState<number>(24);
   const cleanupMutation = useCleanupSystem();
 
+  // Purge Stale State
+  const [purgeThresholdHours, setPurgeThresholdHours] = useState<number>(24);
+  const [purgeOrphanedOnly, setPurgeOrphanedOnly] = useState<boolean>(false);
+  const purgeStaleMutation = usePurgeStaleJobs();
+
   // Restore State
   const [includeGrabbed, setIncludeGrabbed] = useState<boolean>(false);
   const restoreMutation = useRestoreJobs();
@@ -59,6 +64,24 @@ export default function SystemAdmin() {
         },
         onError: (err: unknown) => {
             toast({ variant: "destructive", title: "Cleanup Failed", description: String(err) });
+        }
+    });
+  };
+
+  const handlePurgeStale = () => {
+    purgeStaleMutation.mutate({
+        staleThresholdHours: String(purgeThresholdHours),
+        orphanedOnly: purgeOrphanedOnly,
+    }, {
+        onSuccess: (res) => {
+            toast({
+                title: "Purge Completed",
+                description: res.message || `Marked ${res.markedCount} records. Cutoff: ${res.cutoffTime}`
+            });
+            refetchStuck();
+        },
+        onError: (err: unknown) => {
+            toast({ variant: "destructive", title: "Purge Failed", description: String(err) });
         }
     });
   };
@@ -91,7 +114,7 @@ export default function SystemAdmin() {
         <p className="text-muted-foreground">Manage system health, cleanup, and data restoration.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Cleanup Section */}
         <Card>
           <CardHeader>
@@ -130,6 +153,69 @@ export default function SystemAdmin() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleCleanup} className="bg-destructive hover:bg-destructive/90">
+                            Confirm
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+
+        {/* Purge Stale Jobs Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5" />
+                Purge Stale Jobs
+            </CardTitle>
+            <CardDescription>Mark stale or orphaned job_processing_status records as deleted.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label>Stale Threshold (Hours)</Label>
+                <Input
+                    type="number"
+                    min={1}
+                    value={purgeThresholdHours}
+                    onChange={(e) => setPurgeThresholdHours(Number(e.target.value))}
+                />
+            </div>
+
+            <div className="flex items-center space-x-2 border p-4 rounded-md">
+                <Checkbox
+                    id="purge-orphaned-only"
+                    checked={purgeOrphanedOnly}
+                    onCheckedChange={(c) => setPurgeOrphanedOnly(!!c)}
+                />
+                <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="purge-orphaned-only" className="font-medium">
+                        Orphaned Only
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                        Only purge records whose jobs no longer exist in store or processing status. Safer option.
+                    </p>
+                </div>
+            </div>
+
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full" disabled={purgeStaleMutation.isPending}>
+                        {purgeStaleMutation.isPending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                        Purge Stale Jobs
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Purge</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will logically delete {purgeOrphanedOnly ? "orphaned" : "all"} stale job_processing_status records
+                            not updated for {purgeThresholdHours} hours.
+                            {!purgeOrphanedOnly && " This may affect records whose jobs are still valid but inactive."}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handlePurgeStale} className="bg-destructive hover:bg-destructive/90">
                             Confirm
                         </AlertDialogAction>
                     </AlertDialogFooter>

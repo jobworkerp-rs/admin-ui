@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useJobStatusList, useCleanupJobs } from '@/hooks/use-jobs';
+import { useJobStatusList, usePurgeStaleJobs } from '@/hooks/use-jobs';
 import { useWorkers } from '@/hooks/use-workers';
 import { JobProcessingStatus } from '@/lib/grpc/jobworkerp/data/common';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Play, RefreshCw, Trash2 } from 'lucide-react';
 import {
     AlertDialog,
@@ -48,7 +49,8 @@ export default function JobList() {
   const [page, setPage] = useState(0);
   const LIMIT = 20;
   
-  const [retentionHours, setRetentionHours] = useState<number>(24);
+  const [staleThresholdHours, setStaleThresholdHours] = useState<number>(24);
+  const [orphanedOnly, setOrphanedOnly] = useState<boolean>(false);
 
   const { data: workers } = useWorkers({ runnerIds: [], runnerTypes: [] });
 
@@ -60,18 +62,19 @@ export default function JobList() {
     descending: true,
   });
 
-  const cleanupMutation = useCleanupJobs();
+  const purgeMutation = usePurgeStaleJobs();
 
-  const handleCleanup = () => {
-    cleanupMutation.mutate({
-        retentionHoursOverride: String(retentionHours)
+  const handlePurge = () => {
+    purgeMutation.mutate({
+        staleThresholdHours: String(staleThresholdHours),
+        orphanedOnly: orphanedOnly,
     }, {
-        onSuccess: () => {
-            toast({ title: "Cleanup started", description: `Deleting jobs older than ${retentionHours} hours.` });
+        onSuccess: (res) => {
+            toast({ title: "Purge completed", description: res.message || `Marked ${res.markedCount} records.` });
             refetch();
         },
         onError: (err) => {
-            toast({ variant: "destructive", title: "Cleanup failed", description: String(err) });
+            toast({ variant: "destructive", title: "Purge failed", description: String(err) });
         }
     });
   };
@@ -114,34 +117,43 @@ export default function JobList() {
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <Trash2 className="mr-2 h-4 w-4" /> Cleanup Old Jobs
+                        <Trash2 className="mr-2 h-4 w-4" /> Purge Stale Jobs
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Purge Stale Job Records?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will delete job statuses and results older than the specified retention period.
-                            This action cannot be undone.
+                            This will logically delete stale job_processing_status records older than the specified threshold.
                         </AlertDialogDescription>
-                        <div className="py-4 space-y-2">
-                            <Label htmlFor="retention">Retention Period (Hours)</Label>
-                            <Input 
-                                id="retention"
-                                type="number" 
-                                min={0} 
-                                value={retentionHours} 
-                                onChange={(e) => setRetentionHours(Number(e.target.value))}
-                            />
-                            <p className="text-sm text-muted-foreground">
-                                Jobs older than {retentionHours} hours will be deleted.
-                            </p>
+                        <div className="py-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="stale-threshold">Stale Threshold (Hours)</Label>
+                                <Input
+                                    id="stale-threshold"
+                                    type="number"
+                                    min={1}
+                                    value={staleThresholdHours}
+                                    onChange={(e) => setStaleThresholdHours(Number(e.target.value))}
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                    Records not updated for {staleThresholdHours} hours will be candidates.
+                                </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="orphaned-only"
+                                    checked={orphanedOnly}
+                                    onCheckedChange={(c) => setOrphanedOnly(!!c)}
+                                />
+                                <Label htmlFor="orphaned-only">Orphaned only (safer: only purge records whose jobs no longer exist)</Label>
+                            </div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCleanup} className="bg-destructive hover:bg-destructive/90">
-                            Confirm Cleanup
+                        <AlertDialogAction onClick={handlePurge} className="bg-destructive hover:bg-destructive/90">
+                            Confirm Purge
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
