@@ -65,8 +65,13 @@ export default function JobList() {
   const purgeMutation = usePurgeStaleJobs();
 
   const handlePurge = () => {
+    const hours = Math.floor(staleThresholdHours);
+    if (!Number.isFinite(hours) || hours < 1) {
+      toast({ variant: "destructive", title: "Invalid Input", description: "Stale threshold must be a positive integer (>= 1)." });
+      return;
+    }
     purgeMutation.mutate({
-        staleThresholdHours: String(staleThresholdHours),
+        staleThresholdHours: String(hours),
         orphanedOnly: orphanedOnly,
     }, {
         onSuccess: (res) => {
@@ -126,30 +131,30 @@ export default function JobList() {
                         <AlertDialogDescription>
                             This will logically delete stale job_processing_status records older than the specified threshold.
                         </AlertDialogDescription>
-                        <div className="py-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="stale-threshold">Stale Threshold (Hours)</Label>
-                                <Input
-                                    id="stale-threshold"
-                                    type="number"
-                                    min={1}
-                                    value={staleThresholdHours}
-                                    onChange={(e) => setStaleThresholdHours(Number(e.target.value))}
-                                />
-                                <p className="text-sm text-muted-foreground">
-                                    Records not updated for {staleThresholdHours} hours will be candidates.
-                                </p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="orphaned-only"
-                                    checked={orphanedOnly}
-                                    onCheckedChange={(c) => setOrphanedOnly(!!c)}
-                                />
-                                <Label htmlFor="orphaned-only">Orphaned only (safer: only purge records whose jobs no longer exist)</Label>
-                            </div>
-                        </div>
                     </AlertDialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="stale-threshold">Stale Threshold (Hours)</Label>
+                            <Input
+                                id="stale-threshold"
+                                type="number"
+                                min={1}
+                                value={staleThresholdHours}
+                                onChange={(e) => setStaleThresholdHours(Number(e.target.value))}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Records not updated for {staleThresholdHours} hours will be candidates.
+                            </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="orphaned-only"
+                                checked={orphanedOnly}
+                                onCheckedChange={(c) => setOrphanedOnly(!!c)}
+                            />
+                            <Label htmlFor="orphaned-only">Orphaned only (safer: only purge records whose jobs no longer exist)</Label>
+                        </div>
+                    </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handlePurge} className="bg-destructive hover:bg-destructive/90">

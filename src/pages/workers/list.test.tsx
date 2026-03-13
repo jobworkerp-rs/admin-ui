@@ -176,7 +176,7 @@ describe('WorkerList', () => {
         confirmButton.click();
 
         await waitFor(() => {
-            expect(workerClient.delete).toHaveBeenCalled();
+            expect(workerClient.delete).toHaveBeenCalledWith(expect.objectContaining({ value: 'w1' }));
         });
     });
 });

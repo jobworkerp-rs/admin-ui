@@ -359,19 +359,39 @@ export default function SystemAdmin() {
                                             </TableCell>
                                             <TableCell>{job.updatedAt ? new Date(parseInt(job.updatedAt)).toLocaleString() : '-'}</TableCell>
                                             <TableCell>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="sm" 
-                                                    className="text-destructive hover:bg-destructive/10"
-                                                    onClick={() => {
-                                                        const id = job.id?.value;
-                                                        if (id && confirm(`Are you sure you want to force cancel job ${id}?`)) {
-                                                            handleCancelJob(id);
-                                                        }
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-destructive hover:bg-destructive/10"
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Force Cancel Job?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Are you sure you want to force cancel job {job.id?.value}?
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => {
+                                                                    const id = job.id?.value;
+                                                                    if (id) {
+                                                                        handleCancelJob(id);
+                                                                    }
+                                                                }}
+                                                                className="bg-destructive hover:bg-destructive/90"
+                                                            >
+                                                                Confirm
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </TableCell>
                                         </TableRow>
                                     );
