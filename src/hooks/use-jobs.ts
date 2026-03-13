@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { jobClient, jobStatusClient, jobResultClient } from '@/lib/client';
-import { FindJobProcessingStatusRequest, CleanupRequest, JobProcessingStatusDetailResponse } from '@/lib/grpc/jobworkerp/service/job';
+import { FindJobProcessingStatusRequest, PurgeStaleJobsRequest, JobProcessingStatusDetailResponse } from '@/lib/grpc/jobworkerp/service/job';
 import { JobId } from '@/lib/grpc/jobworkerp/data/job';
 import { FindJobResultListRequest, DeleteJobResultBulkRequest } from '@/lib/grpc/jobworkerp/service/job_result';
 import { JobResult } from '@/lib/grpc/jobworkerp/data/job_result';
@@ -51,11 +51,11 @@ export function useJob(id?: string) {
     });
 }
 
-export function useCleanupJobs() {
+export function usePurgeStaleJobs() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (req: CleanupRequest) => {
-            return await jobStatusClient.cleanup(req);
+        mutationFn: async (req: PurgeStaleJobsRequest) => {
+            return await jobStatusClient.purgeStaleJobs(req);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['job-status-list'] });
