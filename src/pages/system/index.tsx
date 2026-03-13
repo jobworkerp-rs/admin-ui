@@ -55,7 +55,12 @@ export default function SystemAdmin() {
   };
 
   const handleCleanup = () => {
-    cleanupMutation.mutate(retentionHours, {
+    const hours = Math.floor(retentionHours);
+    if (!Number.isFinite(hours) || hours < 1) {
+      toast({ variant: "destructive", title: "Invalid Input", description: "Retention hours must be a positive integer (>= 1)." });
+      return;
+    }
+    cleanupMutation.mutate(hours, {
         onSuccess: (res) => {
             toast({ 
                 title: "Cleanup Completed", 
@@ -69,8 +74,13 @@ export default function SystemAdmin() {
   };
 
   const handlePurgeStale = () => {
+    const hours = Math.floor(purgeThresholdHours);
+    if (!Number.isFinite(hours) || hours < 1) {
+      toast({ variant: "destructive", title: "Invalid Input", description: "Stale threshold must be a positive integer (>= 1)." });
+      return;
+    }
     purgeStaleMutation.mutate({
-        staleThresholdHours: String(purgeThresholdHours),
+        staleThresholdHours: String(hours),
         orphanedOnly: purgeOrphanedOnly,
     }, {
         onSuccess: (res) => {
