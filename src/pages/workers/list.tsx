@@ -124,7 +124,7 @@ export default function WorkerList() {
                   <TableCell>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Delete worker">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>

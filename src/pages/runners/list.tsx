@@ -47,6 +47,9 @@ const RunnerTypeBadge = ({ type }: { type: RunnerType }) => {
     [RunnerType.INLINE_WORKFLOW]: "Inline Workflow",
     [RunnerType.REUSABLE_WORKFLOW]: "Reusable Workflow",
     [RunnerType.CREATE_WORKFLOW]: "Create Workflow",
+    [RunnerType.FUNCTION_SET_SELECTOR]: "FunctionSet Selector",
+    [RunnerType.LLM]: "LLM",
+    [RunnerType.WORKFLOW]: "Workflow",
   };
 
   return (

@@ -162,7 +162,7 @@ describe('WorkerList', () => {
         });
 
         // Click the trash icon button (AlertDialogTrigger) to open the dialog
-        const trashButton = screen.getByRole('button', { name: '' });
+        const trashButton = screen.getByRole('button', { name: /delete worker/i });
         trashButton.click();
 
         // Expect Alert Dialog content to appear
