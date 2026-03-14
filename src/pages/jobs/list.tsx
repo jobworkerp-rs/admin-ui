@@ -65,13 +65,13 @@ export default function JobList() {
   const purgeMutation = usePurgeStaleJobs();
 
   const handlePurge = () => {
-    const hours = Math.floor(staleThresholdHours);
-    if (!Number.isFinite(hours) || hours < 1) {
+    if (purgeMutation.isPending) return;
+    if (!Number.isInteger(staleThresholdHours) || staleThresholdHours < 1) {
       toast({ variant: "destructive", title: "Invalid Input", description: "Stale threshold must be a positive integer (>= 1)." });
       return;
     }
     purgeMutation.mutate({
-        staleThresholdHours: String(hours),
+        staleThresholdHours: String(staleThresholdHours),
         orphanedOnly: orphanedOnly,
     }, {
         onSuccess: (res) => {
@@ -140,7 +140,7 @@ export default function JobList() {
                                 type="number"
                                 min={1}
                                 value={staleThresholdHours}
-                                onChange={(e) => setStaleThresholdHours(Number(e.target.value))}
+                                onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setStaleThresholdHours(v); }}
                             />
                             <p className="text-sm text-muted-foreground">
                                 Records not updated for {staleThresholdHours} hours will be candidates.
@@ -157,7 +157,7 @@ export default function JobList() {
                     </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handlePurge} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={handlePurge} disabled={purgeMutation.isPending} className="bg-destructive hover:bg-destructive/90">
                             Confirm Purge
                         </AlertDialogAction>
                     </AlertDialogFooter>
