@@ -8,7 +8,7 @@ import { FunctionSetServiceDefinition } from './grpc/jobworkerp/function/service
 // Environment variable or default (must match server config)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const runtimeConfig = (window as any).__RUNTIME_CONFIG__;
-const GRPC_ENDPOINT = runtimeConfig?.VITE_GRPC_ENDPOINT || import.meta.env.VITE_GRPC_ENDPOINT || 'http://localhost:9000';
+const GRPC_ENDPOINT = runtimeConfig?.VITE_GRPC_ENDPOINT || import.meta.env.VITE_GRPC_ENDPOINT || `${window.location.protocol}//${window.location.hostname}:9000`;
 
 console.log('gRPC Endpoint:', GRPC_ENDPOINT);
 
