@@ -43,6 +43,7 @@ export default function SystemAdmin() {
   const restoreMutation = useRestoreJobs();
 
   const handleCancelJob = (id: string) => {
+    if (deleteJobMutation.isPending) return;
     deleteJobMutation.mutate(id, {
         onSuccess: () => {
             toast({ title: "Job Cancelled", description: `Job ${id} has been cancelled.` });
@@ -55,17 +56,17 @@ export default function SystemAdmin() {
   };
 
   const handleCleanup = () => {
-    const hours = Math.floor(retentionHours);
-    if (!Number.isFinite(hours) || hours < 1) {
+    if (!Number.isInteger(retentionHours) || retentionHours < 1) {
       toast({ variant: "destructive", title: "Invalid Input", description: "Retention hours must be a positive integer (>= 1)." });
       return;
     }
-    cleanupMutation.mutate(hours, {
+    cleanupMutation.mutate(retentionHours, {
         onSuccess: (res) => {
-            toast({ 
-                title: "Cleanup Completed", 
-                description: `Deleted ${res.deletedCount} records. Cutoff: ${res.cutoffTime}` 
+            toast({
+                title: "Cleanup Completed",
+                description: `Deleted ${res.deletedCount} records. Cutoff: ${res.cutoffTime}`
             });
+            refetchStuck();
         },
         onError: (err: unknown) => {
             toast({ variant: "destructive", title: "Cleanup Failed", description: String(err) });
@@ -74,13 +75,13 @@ export default function SystemAdmin() {
   };
 
   const handlePurgeStale = () => {
-    const hours = Math.floor(purgeThresholdHours);
-    if (!Number.isFinite(hours) || hours < 1) {
+    if (purgeStaleMutation.isPending) return;
+    if (!Number.isInteger(purgeThresholdHours) || purgeThresholdHours < 1) {
       toast({ variant: "destructive", title: "Invalid Input", description: "Stale threshold must be a positive integer (>= 1)." });
       return;
     }
     purgeStaleMutation.mutate({
-        staleThresholdHours: String(hours),
+        staleThresholdHours: String(purgeThresholdHours),
         orphanedOnly: purgeOrphanedOnly,
     }, {
         onSuccess: (res) => {
@@ -141,7 +142,7 @@ export default function SystemAdmin() {
                     type="number" 
                     min={1} 
                     value={retentionHours} 
-                    onChange={(e) => setRetentionHours(Number(e.target.value))} 
+                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setRetentionHours(v); }}
                 />
             </div>
             
@@ -187,7 +188,7 @@ export default function SystemAdmin() {
                     type="number"
                     min={1}
                     value={purgeThresholdHours}
-                    onChange={(e) => setPurgeThresholdHours(Number(e.target.value))}
+                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setPurgeThresholdHours(v); }}
                 />
             </div>
 
@@ -225,7 +226,7 @@ export default function SystemAdmin() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handlePurgeStale} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={handlePurgeStale} disabled={purgeStaleMutation.isPending} className="bg-destructive hover:bg-destructive/90">
                             Confirm
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -377,7 +378,7 @@ export default function SystemAdmin() {
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogCancel>Close</AlertDialogCancel>
                                                             <AlertDialogAction
                                                                 onClick={() => {
                                                                     const id = job.id?.value;
@@ -385,9 +386,10 @@ export default function SystemAdmin() {
                                                                         handleCancelJob(id);
                                                                     }
                                                                 }}
+                                                                disabled={deleteJobMutation.isPending}
                                                                 className="bg-destructive hover:bg-destructive/90"
                                                             >
-                                                                Confirm
+                                                                Force Cancel
                                                             </AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
