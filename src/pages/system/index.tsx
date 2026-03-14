@@ -56,6 +56,7 @@ export default function SystemAdmin() {
   };
 
   const handleCleanup = () => {
+    if (cleanupMutation.isPending) return;
     if (!Number.isInteger(retentionHours) || retentionHours < 1) {
       toast({ variant: "destructive", title: "Invalid Input", description: "Retention hours must be a positive integer (>= 1)." });
       return;
@@ -142,10 +143,10 @@ export default function SystemAdmin() {
                     type="number" 
                     min={1} 
                     value={retentionHours} 
-                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setRetentionHours(v); }}
+                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setRetentionHours(Math.max(1, Math.floor(v))); }}
                 />
             </div>
-            
+
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button variant="destructive" className="w-full" disabled={cleanupMutation.isPending}>
@@ -163,7 +164,7 @@ export default function SystemAdmin() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCleanup} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={handleCleanup} disabled={cleanupMutation.isPending} className="bg-destructive hover:bg-destructive/90">
                             Confirm
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -188,7 +189,7 @@ export default function SystemAdmin() {
                     type="number"
                     min={1}
                     value={purgeThresholdHours}
-                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setPurgeThresholdHours(v); }}
+                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setPurgeThresholdHours(Math.max(1, Math.floor(v))); }}
                 />
             </div>
 

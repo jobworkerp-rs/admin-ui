@@ -140,7 +140,7 @@ export default function JobList() {
                                 type="number"
                                 min={1}
                                 value={staleThresholdHours}
-                                onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setStaleThresholdHours(v); }}
+                                onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setStaleThresholdHours(Math.max(1, Math.floor(v))); }}
                             />
                             <p className="text-sm text-muted-foreground">
                                 Records not updated for {staleThresholdHours} hours will be candidates.
