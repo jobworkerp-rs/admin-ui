@@ -7,7 +7,7 @@
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { Empty, JobProcessingStatus, Priority, ResultOutputItem } from "../data/common";
-import { Job, JobId } from "../data/job";
+import { FeedDataTransport, Job, JobId } from "../data/job";
 import { JobResult } from "../data/job_result";
 import { WorkerId } from "../data/worker";
 import { CountCondition, CountResponse, FindListRequest, SuccessResponse } from "./common";
@@ -60,28 +60,17 @@ export interface JobRequest {
 }
 
 /**
- * # FeedToStream Request
- * Send feed data to a running streaming job
+ * # Client Stream Request
+ * Client-to-server message for client streaming.
+ * The first message MUST contain `job_request`. Subsequent messages contain `feed_data`.
  */
-export interface FeedToStreamRequest {
-  /** Target job ID */
-  jobId:
-    | JobId
+export interface ClientStreamRequest {
+  /** Initial message: job enqueue request (MUST be the first message) */
+  jobRequest?:
+    | JobRequest
     | undefined;
-  /** Feed data payload (protobuf serialized if feed_data_proto is defined) */
-  data: Uint8Array;
-  /** Signal that this is the final feed data chunk */
-  isFinal: boolean;
-}
-
-/**
- * # FeedToStream Response
- * Acknowledgement for feed data delivery
- * NOTE: accepted is always true on success; errors are returned via gRPC Status.
- * Retained for proto3 cost-free extensibility.
- */
-export interface FeedToStreamResponse {
-  accepted: boolean;
+  /** Subsequent messages: feed data chunks using existing FeedDataTransport */
+  feedData?: FeedDataTransport | undefined;
 }
 
 export interface FindQueueListRequest {
@@ -450,28 +439,25 @@ export const JobRequest: MessageFns<JobRequest> = {
   },
 };
 
-function createBaseFeedToStreamRequest(): FeedToStreamRequest {
-  return { jobId: undefined, data: new Uint8Array(0), isFinal: false };
+function createBaseClientStreamRequest(): ClientStreamRequest {
+  return { jobRequest: undefined, feedData: undefined };
 }
 
-export const FeedToStreamRequest: MessageFns<FeedToStreamRequest> = {
-  encode(message: FeedToStreamRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.jobId !== undefined) {
-      JobId.encode(message.jobId, writer.uint32(10).fork()).join();
+export const ClientStreamRequest: MessageFns<ClientStreamRequest> = {
+  encode(message: ClientStreamRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.jobRequest !== undefined) {
+      JobRequest.encode(message.jobRequest, writer.uint32(10).fork()).join();
     }
-    if (message.data.length !== 0) {
-      writer.uint32(18).bytes(message.data);
-    }
-    if (message.isFinal !== false) {
-      writer.uint32(24).bool(message.isFinal);
+    if (message.feedData !== undefined) {
+      FeedDataTransport.encode(message.feedData, writer.uint32(18).fork()).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FeedToStreamRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): ClientStreamRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFeedToStreamRequest();
+    const message = createBaseClientStreamRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -480,7 +466,7 @@ export const FeedToStreamRequest: MessageFns<FeedToStreamRequest> = {
             break;
           }
 
-          message.jobId = JobId.decode(reader, reader.uint32());
+          message.jobRequest = JobRequest.decode(reader, reader.uint32());
           continue;
         }
         case 2: {
@@ -488,15 +474,7 @@ export const FeedToStreamRequest: MessageFns<FeedToStreamRequest> = {
             break;
           }
 
-          message.data = reader.bytes();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.isFinal = reader.bool();
+          message.feedData = FeedDataTransport.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -508,60 +486,17 @@ export const FeedToStreamRequest: MessageFns<FeedToStreamRequest> = {
     return message;
   },
 
-  create(base?: DeepPartial<FeedToStreamRequest>): FeedToStreamRequest {
-    return FeedToStreamRequest.fromPartial(base ?? {});
+  create(base?: DeepPartial<ClientStreamRequest>): ClientStreamRequest {
+    return ClientStreamRequest.fromPartial(base ?? {});
   },
-  fromPartial(object: DeepPartial<FeedToStreamRequest>): FeedToStreamRequest {
-    const message = createBaseFeedToStreamRequest();
-    message.jobId = (object.jobId !== undefined && object.jobId !== null) ? JobId.fromPartial(object.jobId) : undefined;
-    message.data = object.data ?? new Uint8Array(0);
-    message.isFinal = object.isFinal ?? false;
-    return message;
-  },
-};
-
-function createBaseFeedToStreamResponse(): FeedToStreamResponse {
-  return { accepted: false };
-}
-
-export const FeedToStreamResponse: MessageFns<FeedToStreamResponse> = {
-  encode(message: FeedToStreamResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.accepted !== false) {
-      writer.uint32(8).bool(message.accepted);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): FeedToStreamResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFeedToStreamResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.accepted = reader.bool();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  create(base?: DeepPartial<FeedToStreamResponse>): FeedToStreamResponse {
-    return FeedToStreamResponse.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<FeedToStreamResponse>): FeedToStreamResponse {
-    const message = createBaseFeedToStreamResponse();
-    message.accepted = object.accepted ?? false;
+  fromPartial(object: DeepPartial<ClientStreamRequest>): ClientStreamRequest {
+    const message = createBaseClientStreamRequest();
+    message.jobRequest = (object.jobRequest !== undefined && object.jobRequest !== null)
+      ? JobRequest.fromPartial(object.jobRequest)
+      : undefined;
+    message.feedData = (object.feedData !== undefined && object.feedData !== null)
+      ? FeedDataTransport.fromPartial(object.feedData)
+      : undefined;
     return message;
   },
 };
@@ -1476,21 +1411,21 @@ export const JobServiceDefinition = {
       options: {},
     },
     /**
-     * Send feed data to a running streaming job
+     * Client streaming with server streaming response.
+     * Client sends initial job request followed by feed data chunks.
+     * streaming_type is fixed to Response (Internal is for internal workflow use only).
+     * Server response behavior depends on worker's response_type:
+     *   - Response + Direct: Returns streaming results (ResultOutputItem) as bidirectional stream
+     *   - Response + NoResult: Feed-only stream; results available via ListenStream
      *
-     * Prerequisites:
-     * - Job must be in RUNNING status
-     * - Worker must have streaming_type != NONE
-     * - Worker must have use_static = true
-     * - Runner method must have need_feed = true
-     * - Channel concurrency must be 1
+     * broadcast_results=true is required when response_type=NoResult.
      */
-    feedToStream: {
-      name: "FeedToStream",
-      requestType: FeedToStreamRequest,
-      requestStream: false,
-      responseType: FeedToStreamResponse,
-      responseStream: false,
+    enqueueWithClientStream: {
+      name: "EnqueueWithClientStream",
+      requestType: ClientStreamRequest,
+      requestStream: true,
+      responseType: ResultOutputItem,
+      responseStream: true,
       options: {},
     },
     /**
@@ -1623,8 +1558,7 @@ export const JobProcessingStatusServiceDefinition = {
      *
      * Modes:
      * - orphaned_only=false (default): Purges all stale records in bulk
-     * - orphaned_only=true: Only purges records where the job no longer exists in either
-     *   job store or processing status repository (true orphans)
+     * - orphaned_only=true: Only purges orphaned records (job absent from both job store and status repository)
      *
      * Requirements:
      * - JOB_STATUS_RDB_INDEXING=true (returns FAILED_PRECONDITION if disabled)

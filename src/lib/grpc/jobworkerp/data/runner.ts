@@ -141,17 +141,18 @@ export interface MethodSchema {
    */
   outputType: StreamingOutputType;
   /**
-   * # Feed Support Flag
-   * Whether this method accepts feed data during streaming execution
-   * When true, clients can send data via FeedToStream RPC while the job is running
+   * # Client Streaming Support Flag
+   * Whether this method requires client streaming input during execution.
+   * When true, this method MUST be invoked via EnqueueWithClientStream.
+   * When false, this method can be invoked via Enqueue or EnqueueForStream.
    */
-  needFeed: boolean;
+  requireClientStream: boolean;
   /**
-   * # Feed Data Proto Definition (Optional)
-   * Protobuf schema definition for feed data
-   * If empty, feed data is treated as opaque bytes
+   * # Client Streaming Data Proto Definition (Optional)
+   * Protobuf schema definition for client streaming data.
+   * If empty, streaming data is treated as opaque bytes.
    */
-  feedDataProto?: string | undefined;
+  clientStreamDataProto?: string | undefined;
 }
 
 /**
@@ -200,11 +201,11 @@ export interface MethodJsonSchema {
     | string
     | undefined;
   /**
-   * # Feed Data JSON Schema (Optional)
-   * JSON Schema for feed data, generated from MethodSchema.feed_data_proto
-   * None when feed_data_proto is empty or need_feed is false
+   * # Client Streaming Data JSON Schema (Optional)
+   * JSON Schema for client streaming data, generated from MethodSchema.client_stream_data_proto
+   * None when client_stream_data_proto is empty or require_client_stream is false
    */
-  feedDataSchema?: string | undefined;
+  clientStreamDataSchema?: string | undefined;
 }
 
 export interface RunnerId {
@@ -454,8 +455,8 @@ function createBaseMethodSchema(): MethodSchema {
     resultProto: "",
     description: undefined,
     outputType: 0,
-    needFeed: false,
-    feedDataProto: undefined,
+    requireClientStream: false,
+    clientStreamDataProto: undefined,
   };
 }
 
@@ -473,11 +474,11 @@ export const MethodSchema: MessageFns<MethodSchema> = {
     if (message.outputType !== 0) {
       writer.uint32(32).int32(message.outputType);
     }
-    if (message.needFeed !== false) {
-      writer.uint32(40).bool(message.needFeed);
+    if (message.requireClientStream !== false) {
+      writer.uint32(40).bool(message.requireClientStream);
     }
-    if (message.feedDataProto !== undefined) {
-      writer.uint32(50).string(message.feedDataProto);
+    if (message.clientStreamDataProto !== undefined) {
+      writer.uint32(50).string(message.clientStreamDataProto);
     }
     return writer;
   },
@@ -526,7 +527,7 @@ export const MethodSchema: MessageFns<MethodSchema> = {
             break;
           }
 
-          message.needFeed = reader.bool();
+          message.requireClientStream = reader.bool();
           continue;
         }
         case 6: {
@@ -534,7 +535,7 @@ export const MethodSchema: MessageFns<MethodSchema> = {
             break;
           }
 
-          message.feedDataProto = reader.string();
+          message.clientStreamDataProto = reader.string();
           continue;
         }
       }
@@ -555,8 +556,8 @@ export const MethodSchema: MessageFns<MethodSchema> = {
     message.resultProto = object.resultProto ?? "";
     message.description = object.description ?? undefined;
     message.outputType = object.outputType ?? 0;
-    message.needFeed = object.needFeed ?? false;
-    message.feedDataProto = object.feedDataProto ?? undefined;
+    message.requireClientStream = object.requireClientStream ?? false;
+    message.clientStreamDataProto = object.clientStreamDataProto ?? undefined;
     return message;
   },
 };
@@ -679,7 +680,7 @@ export const MethodJsonSchemaMap_SchemasEntry: MessageFns<MethodJsonSchemaMap_Sc
 };
 
 function createBaseMethodJsonSchema(): MethodJsonSchema {
-  return { argsSchema: "", resultSchema: undefined, feedDataSchema: undefined };
+  return { argsSchema: "", resultSchema: undefined, clientStreamDataSchema: undefined };
 }
 
 export const MethodJsonSchema: MessageFns<MethodJsonSchema> = {
@@ -690,8 +691,8 @@ export const MethodJsonSchema: MessageFns<MethodJsonSchema> = {
     if (message.resultSchema !== undefined) {
       writer.uint32(18).string(message.resultSchema);
     }
-    if (message.feedDataSchema !== undefined) {
-      writer.uint32(34).string(message.feedDataSchema);
+    if (message.clientStreamDataSchema !== undefined) {
+      writer.uint32(34).string(message.clientStreamDataSchema);
     }
     return writer;
   },
@@ -724,7 +725,7 @@ export const MethodJsonSchema: MessageFns<MethodJsonSchema> = {
             break;
           }
 
-          message.feedDataSchema = reader.string();
+          message.clientStreamDataSchema = reader.string();
           continue;
         }
       }
@@ -743,7 +744,7 @@ export const MethodJsonSchema: MessageFns<MethodJsonSchema> = {
     const message = createBaseMethodJsonSchema();
     message.argsSchema = object.argsSchema ?? "";
     message.resultSchema = object.resultSchema ?? undefined;
-    message.feedDataSchema = object.feedDataSchema ?? undefined;
+    message.clientStreamDataSchema = object.clientStreamDataSchema ?? undefined;
     return message;
   },
 };
