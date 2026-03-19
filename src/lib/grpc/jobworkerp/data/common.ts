@@ -50,7 +50,8 @@ export enum RunnerType {
    */
   HTTP_REQUEST = 2,
   /**
-   * GRPC_UNARY - # gRPC Unary Runner
+   * GRPC_UNARY - # gRPC Unary Runner [DEPRECATED]
+   * Deprecated: Use GRPC runner with 'unary' method instead
    * Makes unary gRPC calls to specified services
    */
   GRPC_UNARY = 3,
@@ -96,6 +97,14 @@ export enum RunnerType {
    * 'using' defaults to 'run' if not specified
    */
   WORKFLOW = 32769,
+  /**
+   * GRPC - # GRPC Runner (Multi-method)
+   * Unified gRPC runner with 'unary' and 'streaming' methods
+   * - unary: gRPC unary call (default, equivalent to GRPC_UNARY)
+   * - streaming: gRPC server streaming call
+   * 'using' defaults to 'unary' if not specified
+   */
+  GRPC = 32770,
   /**
    * LLM_CHAT - # LLM Chat Completion API Runner [DEPRECATED]
    * Deprecated: Use LLM runner with 'chat' method instead

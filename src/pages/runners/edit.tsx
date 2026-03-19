@@ -225,10 +225,11 @@ export default function RunnerEdit() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value={String(RunnerType.MCP_SERVER)}>MCP Server</SelectItem>
+                    <SelectItem value={String(RunnerType.GRPC)}>gRPC</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Currently, only MCP Server runners can be created via the Admin UI.
+                  Select the runner type. MCP Server and gRPC runners can be created via the Admin UI.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
