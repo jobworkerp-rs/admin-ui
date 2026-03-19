@@ -38,7 +38,6 @@ const RunnerTypeBadge = ({ type }: { type: RunnerType }) => {
     [RunnerType.PLUGIN]: "Plugin",
     [RunnerType.COMMAND]: "Command",
     [RunnerType.HTTP_REQUEST]: "HTTP",
-    [RunnerType.GRPC_UNARY]: "gRPC (Unary)",
     [RunnerType.GRPC]: "gRPC",
     [RunnerType.DOCKER]: "Docker",
     [RunnerType.SLACK_POST_MESSAGE]: "Slack",

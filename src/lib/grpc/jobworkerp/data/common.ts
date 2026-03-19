@@ -100,7 +100,7 @@ export enum RunnerType {
   /**
    * GRPC - # GRPC Runner (Multi-method)
    * Unified gRPC runner with 'unary' and 'streaming' methods
-   * - unary: gRPC unary call (default, equivalent to GRPC_UNARY)
+   * - unary: gRPC unary call (default)
    * - streaming: gRPC server streaming call
    * 'using' defaults to 'unary' if not specified
    */
