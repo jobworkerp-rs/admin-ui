@@ -34,7 +34,6 @@ const WorkerCountBadge = ({ runnerId }: { runnerId: string }) => {
 
 const RunnerTypeBadge = ({ type }: { type: RunnerType }) => {
   const labels: Record<number, string> = {
-    [RunnerType.CREATE_WORKFLOW]: "Create Workflow",
     [RunnerType.PLUGIN]: "Plugin",
     [RunnerType.COMMAND]: "Command",
     [RunnerType.HTTP_REQUEST]: "HTTP",
@@ -46,10 +45,6 @@ const RunnerTypeBadge = ({ type }: { type: RunnerType }) => {
     [RunnerType.FUNCTION_SET_SELECTOR]: "FunctionSet Selector",
     [RunnerType.LLM]: "LLM",
     [RunnerType.WORKFLOW]: "Workflow",
-    [RunnerType.REUSABLE_WORKFLOW]: "Reusable Workflow",
-    [RunnerType.LLM_CHAT]: "LLM Chat",
-    [RunnerType.LLM_COMPLETION]: "LLM Completion",
-    [RunnerType.INLINE_WORKFLOW]: "Inline Workflow",
   };
 
   return (
