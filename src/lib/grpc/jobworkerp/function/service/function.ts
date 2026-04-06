@@ -721,6 +721,15 @@ export const FunctionServiceDefinition = {
       responseStream: false,
       options: {},
     },
+    /** Upsert a Worker: create if not exists, update if name conflicts */
+    upsertWorker: {
+      name: "UpsertWorker",
+      requestType: CreateWorkerRequest,
+      requestStream: false,
+      responseType: CreateWorkerResponse,
+      responseStream: false,
+      options: {},
+    },
   },
 } as const;
 

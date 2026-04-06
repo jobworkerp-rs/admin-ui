@@ -47,6 +47,9 @@ i18n
                         title: "Workers",
                         new: "New Worker",
                         edit: "Edit Worker",
+                        release: "Release",
+                        release_confirm_title: "Release Runner Pool",
+                        release_confirm_desc: "Release the runner pool for \"{{name}}\"? The pool will be discarded and lazily re-created on the next job execution.",
                         fields: {
                             name: "Name",
                             description: "Description",
@@ -100,6 +103,9 @@ i18n
                         title: "ワーカー",
                         new: "新規ワーカー",
                         edit: "ワーカー編集",
+                        release: "解放",
+                        release_confirm_title: "ランナープールの解放",
+                        release_confirm_desc: "「{{name}}」のランナープールを解放しますか？プールは破棄され、次回ジョブ実行時に再作成されます。",
                         fields: {
                             name: "名前",
                             description: "説明",

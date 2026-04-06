@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useWorkers, useDeleteWorker } from "@/hooks/use-workers";
+import { useWorkers, useDeleteWorker, useReleaseStaticWorker } from "@/hooks/use-workers";
 import { useRunners } from "@/hooks/use-runners";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,7 @@ export default function WorkerList() {
   const { data: runners } = useRunners();
 
   const deleteWorker = useDeleteWorker();
+  const releaseWorker = useReleaseStaticWorker();
 
   // const handleDelete = async () => { ... } // Removed unused function
 
@@ -68,15 +69,15 @@ export default function WorkerList() {
       </div>
 
       <div className="border rounded-md">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>{t("workers.fields.name")}</TableHead>
-              <TableHead>{t("workers.fields.runner")}</TableHead>
-              <TableHead>{t("workers.fields.description")}</TableHead>
-              <TableHead>{t("workers.fields.periodic")}</TableHead>
-              <TableHead>Queue</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
+              <TableHead className="w-[15%]">{t("workers.fields.name")}</TableHead>
+              <TableHead className="w-[12%]">{t("workers.fields.runner")}</TableHead>
+              <TableHead className="w-[43%]">{t("workers.fields.description")}</TableHead>
+              <TableHead className="w-[10%]">{t("workers.fields.periodic")}</TableHead>
+              <TableHead className="w-[10%]">Queue</TableHead>
+              <TableHead className="w-[10%]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -101,17 +102,17 @@ export default function WorkerList() {
             ) : (
                 workers?.map((worker) => (
                 <TableRow key={worker.id?.value}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium truncate">
                       <Link to={`/workers/${worker.id?.value}`} className="hover:underline text-primary">
                           {worker.data?.name}
                       </Link>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="truncate">
                       <Badge variant="outline">
                           {getRunnerName(worker.data?.runnerId?.value)}
                       </Badge>
                   </TableCell>
-                  <TableCell>{worker.data?.description}</TableCell>
+                  <TableCell className="break-words whitespace-normal">{worker.data?.description}</TableCell>
                   <TableCell>
                       {worker.data?.periodicInterval && worker.data.periodicInterval > 0 
                         ? `${worker.data.periodicInterval}ms`
@@ -122,35 +123,68 @@ export default function WorkerList() {
                       {worker.data?.queueType}
                   </TableCell>
                   <TableCell>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Delete worker">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>{t("common.delete_confirm_title")}</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {t("common.delete_confirm_desc")}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-red-600 hover:bg-red-700"
-                            onClick={() => {
-                              if (worker.id?.value) {
-                                deleteWorker.mutate(worker.id.value);
-                              }
-                            }}
-                            disabled={deleteWorker.isPending}
-                          >
-                            {deleteWorker.isPending ? "Deleting..." : t("common.delete")}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex gap-1">
+                      {worker.data?.useStatic && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-orange-600 hover:text-orange-700 hover:bg-orange-100" aria-label="Release static worker pool">
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{t("workers.release_confirm_title")}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t("workers.release_confirm_desc", { name: worker.data?.name })}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-orange-600 hover:bg-orange-700"
+                                onClick={() => {
+                                  if (worker.id?.value) {
+                                    releaseWorker.mutate(worker.id.value);
+                                  }
+                                }}
+                                disabled={releaseWorker.isPending}
+                              >
+                                {releaseWorker.isPending ? "Releasing..." : t("workers.release")}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Delete worker">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{t("common.delete_confirm_title")}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {t("common.delete_confirm_desc")}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 hover:bg-red-700"
+                              onClick={() => {
+                                if (worker.id?.value) {
+                                  deleteWorker.mutate(worker.id.value);
+                                }
+                              }}
+                              disabled={deleteWorker.isPending}
+                            >
+                              {deleteWorker.isPending ? "Deleting..." : t("common.delete")}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

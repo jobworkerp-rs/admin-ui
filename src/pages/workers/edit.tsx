@@ -459,6 +459,42 @@ export default function WorkerEdit() {
                         </FormItem>
                     )}
                     />
+                    <FormField
+                    control={form.control}
+                    name="useStatic"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                            <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel>Use Static</FormLabel>
+                            <FormDescription>Run fixed number of instances with lock</FormDescription>
+                        </div>
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="broadcastResults"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                            <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel>Broadcast Results</FormLabel>
+                            <FormDescription>Broadcast job results to all listeners</FormDescription>
+                        </div>
+                        </FormItem>
+                    )}
+                    />
              </div>
 
           <div className="flex justify-end gap-2">

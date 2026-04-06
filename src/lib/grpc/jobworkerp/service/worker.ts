@@ -83,6 +83,11 @@ export interface FindChannelListResponse {
   channels: ChannelInfo[];
 }
 
+export interface ReleaseStaticWorkerRequest {
+  workerId?: WorkerId | undefined;
+  name?: string | undefined;
+}
+
 function createBaseCreateWorkerResponse(): CreateWorkerResponse {
   return { id: undefined };
 }
@@ -631,6 +636,66 @@ export const FindChannelListResponse: MessageFns<FindChannelListResponse> = {
   },
 };
 
+function createBaseReleaseStaticWorkerRequest(): ReleaseStaticWorkerRequest {
+  return { workerId: undefined, name: undefined };
+}
+
+export const ReleaseStaticWorkerRequest: MessageFns<ReleaseStaticWorkerRequest> = {
+  encode(message: ReleaseStaticWorkerRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.workerId !== undefined) {
+      WorkerId.encode(message.workerId, writer.uint32(10).fork()).join();
+    }
+    if (message.name !== undefined) {
+      writer.uint32(18).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ReleaseStaticWorkerRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseReleaseStaticWorkerRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.workerId = WorkerId.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  create(base?: DeepPartial<ReleaseStaticWorkerRequest>): ReleaseStaticWorkerRequest {
+    return ReleaseStaticWorkerRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ReleaseStaticWorkerRequest>): ReleaseStaticWorkerRequest {
+    const message = createBaseReleaseStaticWorkerRequest();
+    message.workerId = (object.workerId !== undefined && object.workerId !== null)
+      ? WorkerId.fromPartial(object.workerId)
+      : undefined;
+    message.name = object.name ?? undefined;
+    return message;
+  },
+};
+
 export type WorkerServiceDefinition = typeof WorkerServiceDefinition;
 export const WorkerServiceDefinition = {
   name: "WorkerService",
@@ -638,6 +703,14 @@ export const WorkerServiceDefinition = {
   methods: {
     create: {
       name: "Create",
+      requestType: WorkerData,
+      requestStream: false,
+      responseType: CreateWorkerResponse,
+      responseStream: false,
+      options: {},
+    },
+    upsertByName: {
+      name: "UpsertByName",
       requestType: WorkerData,
       requestStream: false,
       responseType: CreateWorkerResponse,
@@ -710,6 +783,20 @@ export const WorkerServiceDefinition = {
       requestType: Empty,
       requestStream: false,
       responseType: FindChannelListResponse,
+      responseStream: false,
+      options: {},
+    },
+    /**
+     * Release static worker(s) runner pool without modifying the worker definition.
+     * The pool is discarded immediately and will be lazily re-created on the next job execution.
+     * Note: When releasing all (no target specified), worker definition caches for
+     * all workers (including non-static) are also cleared as a side effect.
+     */
+    releaseStaticWorker: {
+      name: "ReleaseStaticWorker",
+      requestType: ReleaseStaticWorkerRequest,
+      requestStream: false,
+      responseType: SuccessResponse,
       responseStream: false,
       options: {},
     },

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workerClient } from '@/lib/client';
-import { FindWorkerListRequest, CountWorkerRequest } from '@/lib/grpc/jobworkerp/service/worker';
+import { FindWorkerListRequest, CountWorkerRequest, ReleaseStaticWorkerRequest } from '@/lib/grpc/jobworkerp/service/worker';
 import { Worker, WorkerId, WorkerData } from '@/lib/grpc/jobworkerp/data/worker';
 import { RunnerId } from '@/lib/grpc/jobworkerp/data/runner';
 
@@ -84,6 +84,21 @@ export function useDeleteWorker() {
         mutationFn: async (id: string) => {
             const wId = WorkerId.create({ value: id });
             return await workerClient.delete(wId);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['workers'] });
+        },
+    });
+}
+
+export function useReleaseStaticWorker() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const req = ReleaseStaticWorkerRequest.create({
+                workerId: WorkerId.create({ value: id }),
+            });
+            return await workerClient.releaseStaticWorker(req);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['workers'] });
