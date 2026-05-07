@@ -5,6 +5,7 @@ import { FindJobProcessingStatusRequest, PurgeStaleJobsRequest, JobProcessingSta
 import { JobId } from '@/lib/grpc/jobworkerp/data/job';
 import { FindJobResultListRequest, DeleteJobResultBulkRequest } from '@/lib/grpc/jobworkerp/service/job_result';
 import { JobResult } from '@/lib/grpc/jobworkerp/data/job_result';
+import { isMissingEntityError, retryUnlessMissing } from '@/lib/grpc-utils';
 
 
 // Fetch job status list (Advanced search)
@@ -37,14 +38,28 @@ export function useJob(id?: string) {
             const jobResponse = await jobClient.find(jId);
             const statusResponse = await jobStatusClient.find(jId);
 
-            // We might also want result if finished, but let's stick to basic info first.
-            // Result is in JobResultService
-            const resultResponse = await jobResultClient.find(jId);
+            // Tolerate WorkerNotFound so the detail page still renders job
+            // info when the referenced worker has been deleted.
+            let resultData;
+            try {
+                const resultResponse = await jobResultClient.find(jId);
+                resultData = resultResponse.data;
+            } catch (e) {
+                if (isMissingEntityError(e)) {
+                    console.warn(
+                        'jobResultClient.find failed (worker/runner may be deleted); continuing without result data:',
+                        e,
+                    );
+                    resultData = undefined;
+                } else {
+                    throw e;
+                }
+            }
 
             return {
                 job: jobResponse.data,
                 status: statusResponse.status,
-                result: resultResponse.data
+                result: resultData
             };
         },
         enabled: !!id,
@@ -108,21 +123,10 @@ export function useJobResult(id?: string) {
         queryKey: ['job-result', id],
         queryFn: async () => {
             if (!id) throw new Error("ID is required");
-            // Note: JobResultService.find takes JobResultId { value: number (int64) }
-            // But our ID in URL might be string. We need to parse it.
-            // Wait, JobResultId value is int64. The URL param will be string.
-            // We need to parse it to BigInt or similar? 
-            // The proto definition says `int64 value = 1`. In JS/TS with ts-proto, it's usually number or string (if long).
-            // Let's check JobResultId definition. It says `value: number`.
-            // Wait, int64 is usually string or number? TS proto config usually sets to string for 64bit.
-            // Let's assume it accepts the string representation if configured so, or needs parsing.
-            // Let's check JobResultId definition again.
-            // It was imported from `../data/job_result`.
-            // In line 101 of job_result.proto: message JobResultId { int64 value = 1; }
-
             // JobResultId value is string (int64)
             return await jobResultClient.find({ value: id });
         },
         enabled: !!id,
+        retry: retryUnlessMissing,
     });
 }

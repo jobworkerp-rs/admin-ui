@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, RefreshCw, XCircle, RotateCcw } from 'lucide-react';
 import { JobProcessingStatus, ResultStatus } from '@/lib/grpc/jobworkerp/data/common';
 import { toast } from '@/hooks/use-toast';
+import { SchemaUnavailableBanner } from '@/components/schema-unavailable-banner';
 
 export default function JobDetail() {
     const { id } = useParams<{ id: string }>();
@@ -23,10 +24,17 @@ export default function JobDetail() {
     // Dependent queries (Safe to call even if data is loading - pass undefined)
     const jobData = data?.job?.data;
     const workerId = jobData?.workerId?.value;
-    const { data: worker } = useWorker(workerId);
-    
+    const { data: worker, error: workerError, isFetched: workerFetched } = useWorker(workerId);
+
     const runnerId = worker?.data?.runnerId?.value;
-    const { data: runner } = useRunner(runnerId);
+    const { data: runner, error: runnerError, isFetched: runnerFetched } = useRunner(runnerId);
+
+    // The proto schema lives on the runner; if either lookup fails or returns
+    // empty (deleted entity — server replies Ok(None), not an error), fall
+    // back to raw text and surface that to the user.
+    const workerMissing = !!workerId && (!!workerError || (workerFetched && !worker));
+    const runnerMissing = !!runnerId && (!!runnerError || (runnerFetched && !runner));
+    const schemaUnavailable = workerMissing || runnerMissing;
 
     // Determine method used
     const method = jobData?.using || 'run';
@@ -163,6 +171,8 @@ export default function JobDetail() {
                     </Button>
                 </div>
             </div>
+
+            {schemaUnavailable && <SchemaUnavailableBanner />}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>

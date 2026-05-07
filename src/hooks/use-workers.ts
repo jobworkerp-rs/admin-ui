@@ -3,6 +3,7 @@ import { workerClient } from '@/lib/client';
 import { FindWorkerListRequest, CountWorkerRequest, ReleaseStaticWorkerRequest } from '@/lib/grpc/jobworkerp/service/worker';
 import { Worker, WorkerId, WorkerData } from '@/lib/grpc/jobworkerp/data/worker';
 import { RunnerId } from '@/lib/grpc/jobworkerp/data/runner';
+import { retryUnlessMissing } from '@/lib/grpc-utils';
 
 // Fetch list of workers
 export function useWorkers(request: FindWorkerListRequest) {
@@ -19,7 +20,8 @@ export function useWorkers(request: FindWorkerListRequest) {
     });
 }
 
-// Fetch single worker
+// Fetch single worker. Don't retry when the worker is gone — detail pages
+// should fall back to raw display rather than spin on a permanent error.
 export function useWorker(id?: string) {
     return useQuery({
         queryKey: ['worker', id],
@@ -30,6 +32,7 @@ export function useWorker(id?: string) {
             return response.data;
         },
         enabled: !!id,
+        retry: retryUnlessMissing,
     });
 }
 

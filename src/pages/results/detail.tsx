@@ -10,6 +10,7 @@ import { ArrowLeft, RefreshCw, RotateCcw } from 'lucide-react';
 import { ResultStatus, Priority } from '@/lib/grpc/jobworkerp/data/common';
 import * as protobuf from 'protobufjs';
 import { useMemo } from 'react';
+import { SchemaUnavailableBanner } from '@/components/schema-unavailable-banner';
 
 export default function JobResultDetail() {
     const { id } = useParams<{ id: string }>();
@@ -18,14 +19,21 @@ export default function JobResultDetail() {
 
     const { data: jobResult, isLoading: isResultLoading, error, refetch } = useJobResult(id);
     const resultData = jobResult?.data?.data;
-    
+
     // Dependent queries
     const workerId = resultData?.workerId?.value;
-    const { data: worker } = useWorker(workerId);
-    
+    const { data: worker, error: workerError, isFetched: workerFetched } = useWorker(workerId);
+
     const runnerId = worker?.data?.runnerId?.value;
     // We only need runner to get methodProtoMap
-    const { data: runner } = useRunner(runnerId);
+    const { data: runner, error: runnerError, isFetched: runnerFetched } = useRunner(runnerId);
+
+    // The proto schema lives on the runner; if either lookup fails or returns
+    // empty (deleted entity — server replies Ok(None), not an error), fall
+    // back to raw text and surface that to the user.
+    const workerMissing = !!workerId && (!!workerError || (workerFetched && !worker));
+    const runnerMissing = !!runnerId && (!!runnerError || (runnerFetched && !runner));
+    const schemaUnavailable = workerMissing || runnerMissing;
 
     const formatBytes = (bytes?: Uint8Array, protoSchema?: string) => {
         if (!bytes || bytes.length === 0) return "Empty";
@@ -134,6 +142,8 @@ export default function JobResultDetail() {
                     </Button>
                 </div>
             </div>
+
+            {schemaUnavailable && <SchemaUnavailableBanner />}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>

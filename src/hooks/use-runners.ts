@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { runnerClient } from '@/lib/client';
 import { FindRunnerListRequest, CreateRunnerRequest } from '@/lib/grpc/jobworkerp/service/runner';
 import { Runner, RunnerId } from '@/lib/grpc/jobworkerp/data/runner';
+import { retryUnlessMissing } from '@/lib/grpc-utils';
 
 // Fetch list of runners
 export function useRunners(request: FindRunnerListRequest = { runnerTypes: [] }) {
@@ -18,7 +19,8 @@ export function useRunners(request: FindRunnerListRequest = { runnerTypes: [] })
     });
 }
 
-// Fetch single runner
+// Fetch single runner. Same fallback policy as useWorker — skip retries when
+// the runner is gone so detail pages can render raw payloads.
 export function useRunner(id?: string) {
     return useQuery({
         queryKey: ['runner', id],
@@ -29,6 +31,7 @@ export function useRunner(id?: string) {
             return response.data;
         },
         enabled: !!id,
+        retry: retryUnlessMissing,
     });
 }
 
