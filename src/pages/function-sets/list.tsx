@@ -53,7 +53,7 @@ export default function FunctionSetList() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className="w-1/2">Description</TableHead>
               <TableHead>Category</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -80,7 +80,7 @@ export default function FunctionSetList() {
                         {set.data?.name}
                       </Link>
                     </TableCell>
-                    <TableCell>{set.data?.description}</TableCell>
+                    <TableCell className="max-w-md whitespace-pre-wrap break-words">{set.data?.description}</TableCell>
                     <TableCell>{set.data?.category}</TableCell>
                     <TableCell className="text-right">
                        <AlertDialog>
