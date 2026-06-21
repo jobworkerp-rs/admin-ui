@@ -35,6 +35,7 @@ import { useRunners } from "@/hooks/use-runners";
 import { WorkerData } from "@/lib/grpc/jobworkerp/data/worker";
 import { RunnerId } from "@/lib/grpc/jobworkerp/data/runner";
 import { QueueType, ResponseType } from "@/lib/grpc/jobworkerp/data/common";
+import { findFirstType } from "@/lib/format-value";
 
 // Form Schema
 const formSchema = z.object({
@@ -128,19 +129,6 @@ export default function WorkerEdit() {
            try {
                setIsProtoDecoding(true);
                const parsed = protobuf.parse(runner.data.runnerSettingsProto);
-               // Heuristic to find message type (same as DynamicProtoForm)
-               const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-                for (const nested of namespace.nestedArray) {
-                  if (nested instanceof protobuf.Type) {
-                    return nested;
-                  }
-                  if (nested instanceof protobuf.Namespace) {
-                    const found = findFirstType(nested);
-                    if (found) return found;
-                  }
-                }
-                return null;
-              };
               const type = findFirstType(parsed.root);
               if (type) {
                   const decoded = type.decode(worker.data!.runnerSettings);
@@ -177,19 +165,6 @@ export default function WorkerEdit() {
      if (selectedRunner?.data?.runnerSettingsProto && Object.keys(runnerSettingsJson).length > 0) {
          try {
              const parsed = protobuf.parse(selectedRunner.data.runnerSettingsProto);
-             // Logic to find type (duplicated, could be util)
-             const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-                for (const nested of namespace.nestedArray) {
-                  if (nested instanceof protobuf.Type) {
-                    return nested;
-                  }
-                  if (nested instanceof protobuf.Namespace) {
-                    const found = findFirstType(nested);
-                    if (found) return found;
-                  }
-                }
-                return null;
-              };
               const type = findFirstType(parsed.root);
               if (type) {
                   const message = type.fromObject(runnerSettingsJson);

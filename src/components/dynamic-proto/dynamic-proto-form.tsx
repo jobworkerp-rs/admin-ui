@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
+import { findFirstType } from "@/lib/format-value";
 
 interface DynamicProtoFormProps {
   protoDefinition: string;
@@ -48,19 +49,6 @@ export function DynamicProtoForm({
         const parsed = protobuf.parse(protoDefinition);
 
         // Heuristic: Find the first Type (Message) in the root or nested namespaces
-        const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-          for (const nested of namespace.nestedArray) {
-            if (nested instanceof protobuf.Type) {
-              return nested;
-            }
-            if (nested instanceof protobuf.Namespace) {
-              const found = findFirstType(nested);
-              if (found) return found;
-            }
-          }
-          return null;
-        };
-
         const type = findFirstType(parsed.root);
         
         if (!isCancelled) {

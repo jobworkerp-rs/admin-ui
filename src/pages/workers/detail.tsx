@@ -7,6 +7,8 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RunnerSettingsView } from "@/components/runner-settings-view";
+import { findFirstType } from "@/lib/format-value";
 import { useWorker } from "@/hooks/use-workers";
 import { useRunners } from "@/hooks/use-runners";
 import { QueueType, ResponseType } from "@/lib/grpc/jobworkerp/data/common";
@@ -32,20 +34,6 @@ export default function WorkerDetail() {
         try {
           setIsProtoDecoding(true);
           const parsed = protobuf.parse(runner.data.runnerSettingsProto);
-          
-          // Helper to find first type
-          const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-             for (const nested of namespace.nestedArray) {
-               if (nested instanceof protobuf.Type) {
-                 return nested;
-               }
-               if (nested instanceof protobuf.Namespace) {
-                 const found = findFirstType(nested);
-                 if (found) return found;
-               }
-             }
-             return null;
-           };
 
            const type = findFirstType(parsed.root);
            if (type) {
@@ -168,9 +156,7 @@ export default function WorkerDetail() {
                   <CardTitle>Runner Settings</CardTitle>
               </CardHeader>
               <CardContent>
-                  <pre className="bg-muted p-4 rounded-md overflow-auto max-h-[400px]">
-                      {JSON.stringify(runnerSettingsJson, null, 2)}
-                  </pre>
+                  <RunnerSettingsView settings={runnerSettingsJson} />
               </CardContent>
           </Card>
       )}

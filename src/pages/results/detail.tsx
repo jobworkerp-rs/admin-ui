@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, RefreshCw, RotateCcw } from 'lucide-react';
 import { ResultStatus, Priority } from '@/lib/grpc/jobworkerp/data/common';
-import * as protobuf from 'protobufjs';
 import { useMemo } from 'react';
 import { SchemaUnavailableBanner } from '@/components/schema-unavailable-banner';
+import { formatProtoBytes } from '@/lib/format-value';
 
 export default function JobResultDetail() {
     const { id } = useParams<{ id: string }>();
@@ -35,48 +35,6 @@ export default function JobResultDetail() {
     const runnerMissing = !!runnerId && (!!runnerError || (runnerFetched && !runner));
     const schemaUnavailable = workerMissing || runnerMissing;
 
-    const formatBytes = (bytes?: Uint8Array, protoSchema?: string) => {
-        if (!bytes || bytes.length === 0) return "Empty";
-
-        if (protoSchema) {
-            try {
-                // Parse the schema
-                const root = protobuf.parse(protoSchema).root;
-                // Find the first type
-                const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-                     for (const nested of namespace.nestedArray) {
-                        if (nested instanceof protobuf.Type) return nested;
-                        if (nested instanceof protobuf.Namespace) {
-                            const found = findFirstType(nested);
-                            if (found) return found;
-                        }
-                    }
-                    return null;
-                };
-                const type = findFirstType(root);
-
-                if (type) {
-                    const message = type.decode(bytes);
-                    return JSON.stringify(message.toJSON(), null, 2);
-                }
-            } catch (e) {
-                console.warn("Failed to decode using proto schema:", e);
-            }
-        }
-
-        // Fallback to text decode
-        try {
-            const text = new TextDecoder().decode(bytes);
-            try {
-                // Try format as JSON if text
-                return JSON.stringify(JSON.parse(text), null, 2);
-            } catch {
-                return text;
-            }
-        } catch {
-            return `[Binary Data] ${bytes.length} bytes`;
-        }
-    };
 
     // Determine method used
     const method = resultData?.using || 'run'; // Default to 'run' if not specified (e.g. single method runners often imply 'run')
@@ -208,8 +166,8 @@ export default function JobResultDetail() {
                     <CardTitle>Arguments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900">
-                        {formatBytes(rData.args, schema?.argsProto)}
+                    <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900 whitespace-pre-wrap break-words">
+                        {formatProtoBytes(rData.args, schema?.argsProto)}
                     </pre>
                 </CardContent>
             </Card>
@@ -219,8 +177,8 @@ export default function JobResultDetail() {
                     <CardTitle>Result Output</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900">
-                         {formatBytes(rData.output?.items, schema?.resultProto)}
+                    <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900 whitespace-pre-wrap break-words">
+                         {formatProtoBytes(rData.output?.items, schema?.resultProto)}
                     </pre>
                 </CardContent>
             </Card>

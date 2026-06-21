@@ -23,39 +23,9 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import * as protobuf from "protobufjs";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { formatProtoBytes, findFirstType } from "@/lib/format-value";
 
 import { Badge } from "@/components/ui/badge";
-
-// Helper to find first type in proto definition
-const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-    for (const nested of namespace.nestedArray) {
-      if (nested instanceof protobuf.Type) return nested;
-      if (nested instanceof protobuf.Namespace) {
-        const found = findFirstType(nested);
-        if (found) return found;
-      }
-    }
-    return null;
-};
-
-// Helper to format bytes
-const formatBytes = (bytes?: Uint8Array, protoSchema?: string) => {
-    if (!bytes || bytes.length === 0) return "Empty";
-    if (protoSchema) {
-        try {
-            const root = protobuf.parse(protoSchema).root;
-            const type = findFirstType(root);
-            if (type) {
-                const message = type.decode(bytes);
-                return JSON.stringify(message.toJSON(), null, 2);
-            }
-        } catch (e) { console.warn(e); }
-    }
-    try {
-        const text = new TextDecoder().decode(bytes);
-        try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
-    } catch { return `[Binary] ${bytes.length} bytes`; }
-};
 
 export default function JobEnqueue() {
   const navigate = useNavigate();
@@ -372,7 +342,7 @@ export default function JobEnqueue() {
                         <div className="space-y-2">
                             <Label>Output:</Label>
                             <div className="h-[300px] w-full rounded-md border p-4 bg-muted/50 font-mono text-sm overflow-auto">
-                                <pre>{formatBytes(executionResult.data?.output?.items, methodSchema?.resultProto)}</pre>
+                                <pre className="whitespace-pre-wrap break-words">{formatProtoBytes(executionResult.data?.output?.items, methodSchema?.resultProto)}</pre>
                             </div>
                         </div>
                     </div>

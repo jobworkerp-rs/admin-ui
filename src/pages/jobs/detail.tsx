@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMemo } from 'react';
-import * as protobuf from 'protobufjs';
+import { formatProtoBytes } from '@/lib/format-value';
 import { useJob, useCancelJob } from '@/hooks/use-jobs';
 import { useWorker } from '@/hooks/use-workers';
 import { useRunner } from '@/hooks/use-runners';
@@ -49,45 +49,6 @@ export default function JobDetail() {
 
     const { status, result } = data;
     // jobData is already defined above
-
-    const formatBytes = (bytes?: Uint8Array, protoSchema?: string) => {
-        if (!bytes || bytes.length === 0) return "Empty";
-
-        if (protoSchema) {
-            try {
-                const root = protobuf.parse(protoSchema).root;
-                const findFirstType = (namespace: protobuf.NamespaceBase): protobuf.Type | null => {
-                     for (const nested of namespace.nestedArray) {
-                        if (nested instanceof protobuf.Type) return nested;
-                        if (nested instanceof protobuf.Namespace) {
-                            const found = findFirstType(nested);
-                            if (found) return found;
-                        }
-                    }
-                    return null;
-                };
-                const type = findFirstType(root);
-
-                if (type) {
-                    const message = type.decode(bytes);
-                    return JSON.stringify(message.toJSON(), null, 2);
-                }
-            } catch (e) {
-                console.warn("Failed to decode using proto schema:", e);
-            }
-        }
-
-        try {
-            const text = new TextDecoder().decode(bytes);
-            try {
-                return JSON.stringify(JSON.parse(text), null, 2);
-            } catch {
-                return text;
-            }
-        } catch {
-            return `[Binary Data] ${bytes.length} bytes`;
-        }
-    };
 
     const statusMap: Record<number, { label: string, color: string }> = {
         [JobProcessingStatus.UNKNOWN]: { label: 'Unknown', color: 'bg-gray-500' },
@@ -238,8 +199,8 @@ export default function JobDetail() {
                     <CardTitle>Arguments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900">
-                        {formatBytes(jobData.args, schema?.argsProto)}
+                    <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900 whitespace-pre-wrap break-words">
+                        {formatProtoBytes(jobData.args, schema?.argsProto)}
                     </pre>
                 </CardContent>
             </Card>
@@ -250,9 +211,9 @@ export default function JobDetail() {
                         <CardTitle>Result Output</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900">
+                        <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900 whitespace-pre-wrap break-words">
                              {/* ResultOutput.items is Uint8Array */}
-                             {formatBytes(result.data.output?.items, schema?.resultProto)}
+                             {formatProtoBytes(result.data.output?.items, schema?.resultProto)}
                         </pre>
                     </CardContent>
                 </Card>
