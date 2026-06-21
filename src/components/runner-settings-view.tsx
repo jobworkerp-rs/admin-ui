@@ -1,4 +1,5 @@
-import { formatSettingValue } from "@/lib/format-value";
+import { useMemo } from "react";
+import { formatDecodedValue } from "@/lib/format-value";
 
 interface RunnerSettingsViewProps {
   settings: Record<string, unknown>;
@@ -6,12 +7,20 @@ interface RunnerSettingsViewProps {
 
 /**
  * Render decoded runner settings as a key-value table. Each value is
- * normalized via formatSettingValue so nested JSON strings are pretty-printed
+ * normalized via formatDecodedValue so nested JSON strings are pretty-printed
  * and multi-line text keeps its real line breaks instead of collapsing into a
  * single unreadable line.
  */
 export function RunnerSettingsView({ settings }: RunnerSettingsViewProps) {
-  const entries = Object.entries(settings);
+  // Formatting recurses into nested JSON, so memoize until settings change
+  // rather than re-running it on every parent re-render.
+  const entries = useMemo(
+    () =>
+      Object.entries(settings).map(
+        ([key, value]) => [key, formatDecodedValue(value)] as const,
+      ),
+    [settings],
+  );
 
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground">No settings.</p>;
@@ -19,8 +28,7 @@ export function RunnerSettingsView({ settings }: RunnerSettingsViewProps) {
 
   return (
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-md border bg-border sm:grid-cols-[minmax(8rem,12rem)_1fr]">
-      {entries.map(([key, value]) => {
-        const formatted = formatSettingValue(value);
+      {entries.map(([key, formatted]) => {
         return (
           // display: contents lets each row's two cells flow directly into the
           // parent grid so key and value share the same column tracks.

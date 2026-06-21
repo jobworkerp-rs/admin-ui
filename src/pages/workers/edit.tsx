@@ -35,7 +35,7 @@ import { useRunners } from "@/hooks/use-runners";
 import { WorkerData } from "@/lib/grpc/jobworkerp/data/worker";
 import { RunnerId } from "@/lib/grpc/jobworkerp/data/runner";
 import { QueueType, ResponseType } from "@/lib/grpc/jobworkerp/data/common";
-import { findFirstType } from "@/lib/format-value";
+import { findFirstType, decodeProtoToObject } from "@/lib/proto-utils";
 
 // Form Schema
 const formSchema = z.object({
@@ -128,12 +128,13 @@ export default function WorkerEdit() {
         if (runner?.data?.runnerSettingsProto && worker.data?.runnerSettings && worker.data.runnerSettings.length > 0) {
            try {
                setIsProtoDecoding(true);
-               const parsed = protobuf.parse(runner.data.runnerSettingsProto);
-              const type = findFirstType(parsed.root);
-              if (type) {
-                  const decoded = type.decode(worker.data!.runnerSettings);
-                  setRunnerSettingsJson(type.toObject(decoded, { enums: String, defaults: true }));
-              }
+               const decoded = decodeProtoToObject(
+                 worker.data.runnerSettings,
+                 runner.data.runnerSettingsProto,
+               );
+               if (decoded) {
+                 setRunnerSettingsJson(decoded);
+               }
            } catch (e: unknown) {
                console.error("Failed to decode runner settings", e);
                toast({

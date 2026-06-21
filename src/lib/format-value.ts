@@ -1,4 +1,5 @@
 import * as protobuf from "protobufjs";
+import { findFirstType } from "./proto-utils";
 
 /**
  * Try to parse a string as JSON, but only when it clearly *is* a JSON
@@ -51,11 +52,12 @@ function normalizeDeep(value: unknown, seen = new Set<object>()): unknown {
 }
 
 /**
- * Convert an unknown runner-setting value into a human-readable string.
+ * Convert an unknown value (decoded from protobuf: runner settings, job args,
+ * result output, etc.) into a human-readable string.
  *
- * Runner settings are decoded from protobuf and often carry values that are
- * themselves JSON strings or multi-line text, which render unreadably when
- * dumped through a single JSON.stringify. This normalizes each value:
+ * Such values often carry strings that are themselves JSON or multi-line text,
+ * which render unreadably when dumped through a single JSON.stringify. This
+ * normalizes each value:
  * - string that is actually JSON  -> parsed and pretty-printed (recursively)
  * - other string                  -> returned as-is (real newlines preserved)
  * - object / array                -> pretty-printed JSON, with any nested JSON
@@ -63,7 +65,7 @@ function normalizeDeep(value: unknown, seen = new Set<object>()): unknown {
  * - null / undefined              -> "" (caller may show a dash)
  * - primitive (number/boolean)    -> String(value)
  */
-export function formatSettingValue(value: unknown): string {
+export function formatDecodedValue(value: unknown): string {
   if (value === null || value === undefined) return "";
 
   if (typeof value === "string") {
@@ -81,30 +83,16 @@ export function formatSettingValue(value: unknown): string {
   return String(value);
 }
 
-/** Find the first concrete message type defined anywhere in a proto namespace. */
-export function findFirstType(
-  namespace: protobuf.NamespaceBase,
-): protobuf.Type | null {
-  for (const nested of namespace.nestedArray) {
-    if (nested instanceof protobuf.Type) return nested;
-    if (nested instanceof protobuf.Namespace) {
-      const found = findFirstType(nested);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
 /**
  * Decode a protobuf-encoded byte payload (job args, result output, etc.) into a
  * human-readable string, sharing the same nested-JSON unwrapping as
- * formatSettingValue.
+ * formatDecodedValue.
  *
  * Decoding strategy:
  * 1. If a proto schema is given, decode with its first message type.
  * 2. Otherwise (or on failure) fall back to UTF-8 text, parsing it as JSON when
  *    possible.
- * The decoded value is run through formatSettingValue so any nested JSON
+ * The decoded value is run through formatDecodedValue so any nested JSON
  * strings are unwrapped and multi-line text keeps its real newlines. Empty and
  * plain-string payloads are handled without throwing.
  */
@@ -120,17 +108,17 @@ export function formatProtoBytes(
       const type = findFirstType(root);
       if (type) {
         const message = type.decode(bytes);
-        return formatSettingValue(message.toJSON());
+        return formatDecodedValue(message.toJSON());
       }
     } catch (e) {
       console.warn("Failed to decode using proto schema:", e);
     }
   }
 
-  // Fallback: decode as UTF-8 text. formatSettingValue handles JSON strings,
+  // Fallback: decode as UTF-8 text. formatDecodedValue handles JSON strings,
   // plain text and empty strings without throwing.
   try {
-    return formatSettingValue(new TextDecoder().decode(bytes));
+    return formatDecodedValue(new TextDecoder().decode(bytes));
   } catch {
     return `[Binary Data] ${bytes.length} bytes`;
   }
