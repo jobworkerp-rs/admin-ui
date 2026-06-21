@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
-import { findFirstType } from "@/lib/format-value";
+import { findFirstType } from "@/lib/proto-utils";
 
 interface DynamicProtoFormProps {
   protoDefinition: string;

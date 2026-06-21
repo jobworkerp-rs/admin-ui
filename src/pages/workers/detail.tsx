@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import * as protobuf from "protobufjs";
 import { ArrowLeft, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RunnerSettingsView } from "@/components/runner-settings-view";
-import { findFirstType } from "@/lib/format-value";
+import { decodeProtoToObject } from "@/lib/proto-utils";
 import { useWorker } from "@/hooks/use-workers";
 import { useRunners } from "@/hooks/use-runners";
 import { QueueType, ResponseType } from "@/lib/grpc/jobworkerp/data/common";
@@ -33,13 +32,13 @@ export default function WorkerDetail() {
       if (runner?.data?.runnerSettingsProto && worker.data?.runnerSettings && worker.data.runnerSettings.length > 0) {
         try {
           setIsProtoDecoding(true);
-          const parsed = protobuf.parse(runner.data.runnerSettingsProto);
-
-           const type = findFirstType(parsed.root);
-           if (type) {
-               const decoded = type.decode(worker.data!.runnerSettings);
-               setRunnerSettingsJson(type.toObject(decoded, { enums: String, defaults: true }));
-           }
+          const decoded = decodeProtoToObject(
+            worker.data.runnerSettings,
+            runner.data.runnerSettingsProto,
+          );
+          if (decoded) {
+            setRunnerSettingsJson(decoded);
+          }
         } catch (e: unknown) {
              console.error("Failed to decode runner settings", e);
              toast({

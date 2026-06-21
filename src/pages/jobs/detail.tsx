@@ -43,6 +43,18 @@ export default function JobDetail() {
         return runner.data.methodProtoMap.schemas[method];
     }, [runner, method]);
 
+    // Decoding/formatting recurses into nested JSON, so memoize rather than
+    // re-running on every re-render.
+    const formattedArgs = useMemo(
+        () => formatProtoBytes(jobData?.args, schema?.argsProto),
+        [jobData?.args, schema?.argsProto],
+    );
+    const resultOutput = data?.result?.data?.output?.items;
+    const formattedOutput = useMemo(
+        () => formatProtoBytes(resultOutput, schema?.resultProto),
+        [resultOutput, schema?.resultProto],
+    );
+
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div className="text-red-500">Error: {String(error)}</div>;
     if (!data || !data.job || !data.job.data || !jobData) return <div>Job not found</div>;
@@ -200,7 +212,7 @@ export default function JobDetail() {
                 </CardHeader>
                 <CardContent>
                     <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900 whitespace-pre-wrap break-words">
-                        {formatProtoBytes(jobData.args, schema?.argsProto)}
+                        {formattedArgs}
                     </pre>
                 </CardContent>
             </Card>
@@ -213,7 +225,7 @@ export default function JobDetail() {
                     <CardContent>
                         <pre className="bg-slate-100 p-4 rounded-md overflow-auto border font-mono text-sm dark:bg-slate-900 whitespace-pre-wrap break-words">
                              {/* ResultOutput.items is Uint8Array */}
-                             {formatProtoBytes(result.data.output?.items, schema?.resultProto)}
+                             {formattedOutput}
                         </pre>
                     </CardContent>
                 </Card>

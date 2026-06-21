@@ -23,7 +23,8 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import * as protobuf from "protobufjs";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { formatProtoBytes, findFirstType } from "@/lib/format-value";
+import { formatProtoBytes } from "@/lib/format-value";
+import { findFirstType } from "@/lib/proto-utils";
 
 import { Badge } from "@/components/ui/badge";
 
