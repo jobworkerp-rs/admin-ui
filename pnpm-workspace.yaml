@@ -1,3 +1,19 @@
 minimumReleaseAge: 4320
 blockExoticSubdeps: true
 trustPolicy: no-downgrade
+# semver@6.3.1 (via @babel/core) and reselect@5.1.1 (via recharts) lack
+# provenance attestation while later releases have it, so no-downgrade rejects
+# them. Both are widely-used, expected transitive deps pinned by their parents,
+# so we exclude them from the trust check rather than weakening the policy.
+trustPolicyExclude:
+  - semver
+  - reselect
+# Moved from the "pnpm.overrides" field in package.json, which pnpm 10+ no
+# longer reads.
+overrides:
+  vite: npm:rolldown-vite@7.2.5
+  flatted: '>=3.4.0 <4.0.0'
+# protobufjs ships a postinstall that only emits a version-scheme warning and
+# returns early otherwise; allowing it keeps pnpm 11's build-check from failing.
+allowBuilds:
+  protobufjs: true
