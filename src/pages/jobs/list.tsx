@@ -66,8 +66,9 @@ export default function JobList() {
 
   const handlePurge = () => {
     if (purgeMutation.isPending) return;
-    if (!Number.isInteger(staleThresholdHours) || staleThresholdHours < 1) {
-      toast({ variant: "destructive", title: "Invalid Input", description: "Stale threshold must be a positive integer (>= 1)." });
+    const minThresholdHours = orphanedOnly ? 0 : 1;
+    if (!Number.isInteger(staleThresholdHours) || staleThresholdHours < minThresholdHours) {
+      toast({ variant: "destructive", title: "Invalid Input", description: `Stale threshold must be an integer >= ${minThresholdHours}.` });
       return;
     }
     purgeMutation.mutate({
@@ -138,9 +139,9 @@ export default function JobList() {
                             <Input
                                 id="stale-threshold"
                                 type="number"
-                                min={1}
+                                min={orphanedOnly ? 0 : 1}
                                 value={staleThresholdHours}
-                                onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setStaleThresholdHours(Math.max(1, Math.floor(v))); }}
+                                onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setStaleThresholdHours(Math.max(orphanedOnly ? 0 : 1, Math.floor(v))); }}
                             />
                             <p className="text-sm text-muted-foreground">
                                 Records not updated for {staleThresholdHours} hours will be candidates.
@@ -150,7 +151,11 @@ export default function JobList() {
                             <Checkbox
                                 id="orphaned-only"
                                 checked={orphanedOnly}
-                                onCheckedChange={(c) => setOrphanedOnly(!!c)}
+                                onCheckedChange={(c) => {
+                                    const checked = !!c;
+                                    setOrphanedOnly(checked);
+                                    if (!checked && staleThresholdHours < 1) setStaleThresholdHours(1);
+                                }}
                             />
                             <Label htmlFor="orphaned-only">Orphaned only (safer: only purge records whose jobs no longer exist)</Label>
                         </div>

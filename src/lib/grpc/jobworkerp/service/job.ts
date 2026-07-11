@@ -174,7 +174,11 @@ export interface CleanupResponse {
 
 /** Purge stale job processing status records */
 export interface PurgeStaleJobsRequest {
-  /** Stale threshold in hours: records with updated_at older than this are candidates */
+  /**
+   * Stale threshold in hours: records with updated_at older than this are candidates.
+   * This value is still used as the candidate filter when orphaned_only=true,
+   * but the gRPC request validation only constrains it for bulk purge mode.
+   */
   staleThresholdHours: string;
   /**
    * When true, only purge orphaned records (job_id not found in job store AND no active processing status)
@@ -1585,7 +1589,7 @@ export const JobProcessingStatusServiceDefinition = {
      * Requirements:
      * - JOB_STATUS_RDB_INDEXING=true (returns FAILED_PRECONDITION if disabled)
      * - AUTH_TOKEN environment variable must match jobworkerp-auth header (if set)
-     * - stale_threshold_hours must be > 0 (returns INVALID_ARGUMENT if 0)
+     * - stale_threshold_hours is validated only when orphaned_only=false (> 0 and <= 8760)
      */
     purgeStaleJobs: {
       name: "PurgeStaleJobs",

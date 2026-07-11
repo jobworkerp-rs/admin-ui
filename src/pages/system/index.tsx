@@ -77,8 +77,9 @@ export default function SystemAdmin() {
 
   const handlePurgeStale = () => {
     if (purgeStaleMutation.isPending) return;
-    if (!Number.isInteger(purgeThresholdHours) || purgeThresholdHours < 1) {
-      toast({ variant: "destructive", title: "Invalid Input", description: "Stale threshold must be a positive integer (>= 1)." });
+    const minThresholdHours = purgeOrphanedOnly ? 0 : 1;
+    if (!Number.isInteger(purgeThresholdHours) || purgeThresholdHours < minThresholdHours) {
+      toast({ variant: "destructive", title: "Invalid Input", description: `Stale threshold must be an integer >= ${minThresholdHours}.` });
       return;
     }
     purgeStaleMutation.mutate({
@@ -187,9 +188,9 @@ export default function SystemAdmin() {
                 <Label>Stale Threshold (Hours)</Label>
                 <Input
                     type="number"
-                    min={1}
+                    min={purgeOrphanedOnly ? 0 : 1}
                     value={purgeThresholdHours}
-                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setPurgeThresholdHours(Math.max(1, Math.floor(v))); }}
+                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setPurgeThresholdHours(Math.max(purgeOrphanedOnly ? 0 : 1, Math.floor(v))); }}
                 />
             </div>
 
@@ -197,7 +198,11 @@ export default function SystemAdmin() {
                 <Checkbox
                     id="purge-orphaned-only"
                     checked={purgeOrphanedOnly}
-                    onCheckedChange={(c) => setPurgeOrphanedOnly(!!c)}
+                    onCheckedChange={(c) => {
+                        const checked = !!c;
+                        setPurgeOrphanedOnly(checked);
+                        if (!checked && purgeThresholdHours < 1) setPurgeThresholdHours(1);
+                    }}
                 />
                 <div className="grid gap-1.5 leading-none">
                     <Label htmlFor="purge-orphaned-only" className="font-medium">
