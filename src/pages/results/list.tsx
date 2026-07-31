@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useJobResults, useDeleteJobResultsBulk } from "@/hooks/use-jobs";
 import { useWorkers } from "@/hooks/use-workers";
 import { Button } from "@/components/ui/button";

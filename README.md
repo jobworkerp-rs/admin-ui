@@ -26,6 +26,7 @@ This dashboard allows administrators effectively manage background job processin
 
 - **Dashboard**: Real-time overview of job statuses and worker health.
 - **Workers**: Create, edit, and manage worker configurations.
+- **Worker Instances**: Monitor running worker processes, heartbeats, and channel capacity.
 - **Runners**: Manage runner plugins and configurations.
 - **Jobs**:
     - Enqueue new jobs with dynamic forms based on Protocol Buffers schemas.

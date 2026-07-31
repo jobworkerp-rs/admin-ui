@@ -8,9 +8,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboard, Bot, Server, Boxes, ListTodo, ScrollText, Activity } from "lucide-react"
+import { LayoutDashboard, Bot, Server, Boxes, ListTodo, ScrollText, Activity, MonitorCog } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation } from "react-router"
 
 export function AppSidebar() {
   const { t } = useTranslation()
@@ -26,6 +26,11 @@ export function AppSidebar() {
       title: t('common.workers'),
       url: "/workers",
       icon: Bot,
+    },
+    {
+      title: t('common.worker_instances'),
+      url: "/worker-instances",
+      icon: MonitorCog,
     },
     {
       title: t('common.runners'),

@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import JobResultList from '@/pages/results/list';
 import { jobResultClient, workerClient } from '@/lib/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ResultStatus, Priority } from '@/lib/grpc/jobworkerp/data/common';
 

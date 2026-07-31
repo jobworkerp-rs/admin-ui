@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { ArrowLeft, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,34 +23,37 @@ export default function WorkerDetail() {
   const { data: runners } = useRunners();
 
   const [runnerSettingsJson, setRunnerSettingsJson] = useState<Record<string, unknown> | null>(null);
-  const [isProtoDecoding, setIsProtoDecoding] = useState(false);
 
   // Decode runner settings
   useEffect(() => {
+    let cancelled = false;
     if (worker && runners && worker.data?.runnerId?.value) {
       const runner = runners.find(r => r.id?.value === worker.data?.runnerId?.value);
       if (runner?.data?.runnerSettingsProto && worker.data?.runnerSettings && worker.data.runnerSettings.length > 0) {
-        try {
-          setIsProtoDecoding(true);
-          const decoded = decodeProtoToObject(
-            worker.data.runnerSettings,
-            runner.data.runnerSettingsProto,
-          );
-          if (decoded) {
-            setRunnerSettingsJson(decoded);
+        const runnerSettings = worker.data.runnerSettings;
+        const runnerSettingsProto = runner.data.runnerSettingsProto;
+        queueMicrotask(() => {
+          if (cancelled) return;
+          try {
+            const decoded = decodeProtoToObject(
+              runnerSettings,
+              runnerSettingsProto,
+            );
+            if (decoded) {
+              setRunnerSettingsJson(decoded);
+            }
+          } catch (e: unknown) {
+              console.error("Failed to decode runner settings", e);
+              toast({
+                  variant: "destructive",
+                  title: "Error decoding settings",
+                  description: e instanceof Error ? e.message : String(e)
+              });
           }
-        } catch (e: unknown) {
-             console.error("Failed to decode runner settings", e);
-             toast({
-                 variant: "destructive",
-                 title: "Error decoding settings",
-                 description: e instanceof Error ? e.message : String(e)
-             });
-        } finally {
-             setIsProtoDecoding(false);
-        }
+        });
       }
     }
+    return () => { cancelled = true; };
   }, [worker, runners, toast]);
 
   if (isLoadingWorker) return <div>{t("common.loading")}</div>;
@@ -159,7 +162,6 @@ export default function WorkerDetail() {
               </CardContent>
           </Card>
       )}
-       {isProtoDecoding && <div>Decoding settings...</div>}
     </div>
   );
 }

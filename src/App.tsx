@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route } from "react-router"
 import { AppLayout } from "@/components/app-layout"
 import Dashboard from "@/pages/dashboard"
 import FunctionSetList from "@/pages/function-sets/list"
@@ -14,6 +14,7 @@ import JobResultDetail from "@/pages/results/detail"
 import JobList from "@/pages/jobs/list"
 import JobResultList from "@/pages/results/list"
 import SystemAdmin from "@/pages/system"
+import WorkerInstanceList from "@/pages/worker-instances/list"
 function App() {
   return (
     <BrowserRouter>
@@ -36,6 +37,7 @@ function App() {
           <Route path="function-sets/new" element={<FunctionSetEdit />} />
           <Route path="function-sets/:id" element={<FunctionSetEdit />} />
           <Route path="system" element={<SystemAdmin />} />
+          <Route path="worker-instances" element={<WorkerInstanceList />} />
         </Route>
       </Routes>
     </BrowserRouter>
@@ -43,5 +45,3 @@ function App() {
 }
 
 export default App
-
-

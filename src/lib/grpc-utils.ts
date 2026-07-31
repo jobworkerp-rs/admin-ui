@@ -23,3 +23,13 @@ export function retryUnlessMissing(failureCount: number, error: unknown): boolea
     if (isMissingEntityError(error)) return false;
     return failureCount < 3;
 }
+
+export function isUnavailableError(error: unknown): boolean {
+    return error instanceof ClientError && error.code === Status.UNAVAILABLE;
+}
+
+// Worker instance availability is operational data. Retry only a bounded
+// number of unavailable responses so an outage cannot leave the view loading forever.
+export function retryUnavailable(failureCount: number, error: unknown): boolean {
+    return isUnavailableError(error) && failureCount < 3;
+}

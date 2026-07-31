@@ -2,7 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { Outlet } from "react-router-dom"
+import { Outlet } from "react-router"
 import { Separator } from "@/components/ui/separator"
 import { Toaster } from "@/components/ui/toaster"
 

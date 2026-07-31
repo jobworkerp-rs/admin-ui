@@ -4,6 +4,7 @@ import { RunnerServiceDefinition } from './grpc/jobworkerp/service/runner';
 import { JobServiceDefinition, JobProcessingStatusServiceDefinition, JobRestoreServiceDefinition } from './grpc/jobworkerp/service/job';
 import { JobResultServiceDefinition } from './grpc/jobworkerp/service/job_result';
 import { FunctionSetServiceDefinition } from './grpc/jobworkerp/function/service/function_set';
+import { WorkerInstanceServiceDefinition } from './grpc/jobworkerp/service/worker_instance';
 
 // Environment variable or default (must match server config)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,3 +23,4 @@ export const jobStatusClient = clientFactory.create(JobProcessingStatusServiceDe
 export const jobRestoreClient = clientFactory.create(JobRestoreServiceDefinition, channel);
 export const jobResultClient = clientFactory.create(JobResultServiceDefinition, channel);
 export const functionSetClient = clientFactory.create(FunctionSetServiceDefinition, channel);
+export const workerInstanceClient = clientFactory.create(WorkerInstanceServiceDefinition, channel);

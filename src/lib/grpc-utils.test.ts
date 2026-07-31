@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ClientError, Status } from 'nice-grpc-web';
-import { isMissingEntityError, retryUnlessMissing } from './grpc-utils';
+import { isMissingEntityError, isUnavailableError, retryUnavailable, retryUnlessMissing } from './grpc-utils';
 
 const PATH = '/jobworkerp.service.WorkerService/Find';
 
@@ -45,5 +45,22 @@ describe('retryUnlessMissing', () => {
         expect(retryUnlessMissing(0, err)).toBe(true);
         expect(retryUnlessMissing(2, err)).toBe(true);
         expect(retryUnlessMissing(3, err)).toBe(false);
+    });
+});
+
+describe('retryUnavailable', () => {
+    const unavailable = new ClientError(PATH, Status.UNAVAILABLE, 'try again');
+
+    it('retries unavailable responses at most three times', () => {
+        expect(retryUnavailable(0, unavailable)).toBe(true);
+        expect(retryUnavailable(2, unavailable)).toBe(true);
+        expect(retryUnavailable(3, unavailable)).toBe(false);
+    });
+
+    it('does not retry other errors', () => {
+        const internal = new ClientError(PATH, Status.INTERNAL, 'broken');
+        expect(isUnavailableError(unavailable)).toBe(true);
+        expect(isUnavailableError(internal)).toBe(false);
+        expect(retryUnavailable(0, internal)).toBe(false);
     });
 });

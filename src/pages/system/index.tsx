@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useStuckJobs, useCleanupSystem, useRestoreJobs } from '@/hooks/use-system';
 import { useCancelJob, usePurgeStaleJobs } from '@/hooks/use-jobs';
 import { Button } from '@/components/ui/button';

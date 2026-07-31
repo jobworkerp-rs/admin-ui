@@ -11,6 +11,7 @@ i18n
                         welcome: "Welcome to JobWorkerp Admin",
                         dashboard: "Dashboard",
                         workers: "Workers",
+                        worker_instances: "Worker Instances",
                         runners: "Runners",
                         jobs: "Jobs",
                         results: "Results",
@@ -59,6 +60,37 @@ i18n
                             status: "Status"
                         }
                     }
+                    ,
+                    worker_instances: {
+                        title: "Worker Instances",
+                        description: "Monitor registered worker processes and their channel capacity.",
+                        refresh: "Refresh",
+                        retry: "Retry",
+                        reconnecting: "Reconnecting…",
+                        load_error: "Failed to load worker instances.",
+                        total_instances: "Worker Instances",
+                        active_of_total: "Active / total registered instances",
+                        channel_capacity: "Channel Capacity",
+                        include_inactive: "Include inactive instances",
+                        channel: "Channel",
+                        all_channels: "All channels",
+                        instance: "Instance",
+                        instance_id: "Instance ID",
+                        host: "Host / IP",
+                        status: "Status",
+                        activity: "Activity",
+                        registered_at: "Registered At",
+                        last_heartbeat: "Last Heartbeat",
+                        channels: "Channels (Concurrency)",
+                        recovery: "Recovery",
+                        active: "Active",
+                        inactive: "Inactive",
+                        participating: "Participating",
+                        not_participating: "Not participating",
+                        empty: "No worker instances found.",
+                        previous: "Previous",
+                        next: "Next"
+                    }
                 }
             },
             ja: {
@@ -67,6 +99,7 @@ i18n
                         welcome: "JobWorkerp 管理画面へようこそ",
                         dashboard: "ダッシュボード",
                         workers: "ワーカー",
+                        worker_instances: "ワーカーインスタンス",
                         runners: "ランナー",
                         jobs: "ジョブ",
                         results: "実行結果",
@@ -114,6 +147,37 @@ i18n
                             channel: "チャンネル",
                             status: "ステータス"
                         }
+                    }
+                    ,
+                    worker_instances: {
+                        title: "ワーカーインスタンス",
+                        description: "登録済みワーカープロセスとチャンネル処理能力を監視します。",
+                        refresh: "更新",
+                        retry: "再試行",
+                        reconnecting: "再接続中…",
+                        load_error: "ワーカーインスタンスの取得に失敗しました。",
+                        total_instances: "ワーカーインスタンス",
+                        active_of_total: "アクティブ数 / 登録総数",
+                        channel_capacity: "チャンネル処理能力",
+                        include_inactive: "非アクティブなインスタンスを含める",
+                        channel: "チャンネル",
+                        all_channels: "すべてのチャンネル",
+                        instance: "インスタンス",
+                        instance_id: "インスタンス ID",
+                        host: "ホスト / IP",
+                        status: "状態",
+                        activity: "活動状況",
+                        registered_at: "登録日時",
+                        last_heartbeat: "最終ハートビート",
+                        channels: "チャンネル（並行数）",
+                        recovery: "復旧",
+                        active: "アクティブ",
+                        inactive: "非アクティブ",
+                        participating: "参加中",
+                        not_participating: "非参加",
+                        empty: "ワーカーインスタンスはありません。",
+                        previous: "前へ",
+                        next: "次へ"
                     }
                 }
             }
