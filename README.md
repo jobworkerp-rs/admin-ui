@@ -97,6 +97,10 @@ Environment variables can be set in `.env` files (e.g., `.env.local`).
 |----------|-------------|---------|
 | `VITE_GRPC_ENDPOINT` | Base URL for the gRPC-Web API | `http://localhost:9000` |
 
+### CORS
+
+When the browser connects directly to jobworkerp (`VITE_GRPC_ENDPOINT` points to another origin), add the origin serving admin-ui to jobworkerp's `GRPC_WEB_ALLOWED_ORIGINS` (e.g. `GRPC_WEB_ALLOWED_ORIGINS=http://localhost:5173`). jobworkerp rejects cross-origin requests by default; `*` allows every origin and should be used for development only.
+
 ## License
 
 [MIT](LICENSE)

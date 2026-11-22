@@ -97,6 +97,10 @@ pnpm exec playwright test
 |----------|-------------|---------|
 | `VITE_GRPC_ENDPOINT` | gRPC-Web API のベースURL | `http://localhost:9000` |
 
+### CORS
+
+ブラウザから直接jobworkerpに接続する場合(`VITE_GRPC_ENDPOINT`が別オリジンを指す場合)は、admin-uiを配信するオリジンをjobworkerp側の`GRPC_WEB_ALLOWED_ORIGINS`に追加してください(例: `GRPC_WEB_ALLOWED_ORIGINS=http://localhost:5173`)。jobworkerpは既定で他オリジンからのリクエストを拒否します。`*`は全オリジンを許可するため開発用途に限ってください。
+
 ## ライセンス
 
 [MIT](LICENSE)
